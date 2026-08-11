@@ -1,4 +1,4 @@
 rootProject.name = 'printscript'
-include 'lexer', 'parser','common'
-
-
+include 'lexer'
+include 'parser'
+include 'common'
