@@ -8,6 +8,7 @@ import edu.austral.printscript.lexer.patterns.LetterPattern;
 import edu.austral.printscript.lexer.patterns.LetterOrDigitPattern;
 import edu.austral.printscript.lexer.patterns.Pattern;
 
+
 public class IdentifierFinder implements Finder {
 
     private final Pattern letterPattern = new LetterPattern();
