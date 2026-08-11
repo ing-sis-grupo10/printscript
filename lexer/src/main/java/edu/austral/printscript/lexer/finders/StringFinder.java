@@ -8,22 +8,21 @@ import edu.austral.printscript.common.token.TokenType;
 
 public class StringFinder implements Finder {
 
-    private static final char QUOTE = '"';
-
     @Override
     public boolean canHandle(char currentChar) {
-        return currentChar == QUOTE;
+        return currentChar == '"' || currentChar == '\'';
     }
 
     @Override
     public Token find(String input, int startIndex, int row, int column) {
-        StringBuilder lexeme = new StringBuilder();
+        char quote = input.charAt(startIndex);
+        StringBuilder value = new StringBuilder();
         int index = startIndex + 1;
         int startColumn = column;
         column++;
 
-        while (index < input.length() && input.charAt(index) != QUOTE) {
-            lexeme.append(input.charAt(index));
+        while (index < input.length() && input.charAt(index) != quote) {
+            value.append(input.charAt(index));
             index++;
             column++;
         }
@@ -35,6 +34,6 @@ public class StringFinder implements Finder {
 
         column++;
         Span span = Span.of(new Position(row, startColumn), new Position(row, column));
-        return new Token(TokenType.STRING_LITERAL, lexeme.toString(), span);
+        return new Token(TokenType.STRING_LITERAL, value.toString(), span);
     }
 }
