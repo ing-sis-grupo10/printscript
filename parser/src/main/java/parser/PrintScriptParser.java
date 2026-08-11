@@ -9,7 +9,7 @@ import printscript.diagnostics.DiagnosticReporter;
 import java.util.Iterator;
 import java.util.List;
 
-public final class PrintScriptParser implements Parser {
+public final class PrintScriptParser implements Iterator<Statement> {
     private final TokenStream tokens;
     private final List<StatementParser> statementParsers;
     private final ExpressionParser expressionParser;
