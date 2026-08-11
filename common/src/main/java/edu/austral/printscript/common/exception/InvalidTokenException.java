@@ -1,17 +1,17 @@
 package edu.austral.printscript.common.exception;
 
-import edu.austral.printscript.common.token.Position;
+import edu.austral.printscript.common.token.Span;
 
 public class InvalidTokenException extends RuntimeException {
 
-    private final Position position;
+    private final Span span;
 
-    public InvalidTokenException(String message, Position position) {
+    public InvalidTokenException(String message, Span span) {
         super(message);
-        this.position = position;
+        this.span = span;
     }
 
-    public Position getPosition() {
-        return position;
+    public Span getSpan() {
+        return span;
     }
 }

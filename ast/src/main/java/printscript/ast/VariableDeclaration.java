@@ -1,6 +1,6 @@
 package printscript.ast;
 
-import printscript.diagnostics.Span;
+import edu.austral.printscript.common.token.Span;
 
 import java.util.Optional;
 
