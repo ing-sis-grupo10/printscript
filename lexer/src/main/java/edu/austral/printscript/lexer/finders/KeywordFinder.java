@@ -30,3 +30,4 @@ public class KeywordFinder extends AbstractPatternFinder {
         return type == null ? null : new Token(type, scan.value(), scan.span());
     }
 }
+
