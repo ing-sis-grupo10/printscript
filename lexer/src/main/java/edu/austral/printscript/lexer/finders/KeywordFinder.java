@@ -1,7 +1,5 @@
 package edu.austral.printscript.lexer.finders;
 
-import edu.austral.printscript.common.token.Position;
-import edu.austral.printscript.common.token.Span;
 import edu.austral.printscript.common.token.Token;
 import edu.austral.printscript.common.token.TokenType;
 import edu.austral.printscript.lexer.patterns.LetterOrDigitPattern;
@@ -9,7 +7,7 @@ import edu.austral.printscript.lexer.patterns.Pattern;
 
 import java.util.Map;
 
-public class KeywordFinder implements Finder {
+public class KeywordFinder extends AbstractPatternFinder {
 
     private static final Map<String, TokenType> KEYWORDS = Map.of(
             "let", TokenType.LET,
@@ -27,24 +25,8 @@ public class KeywordFinder implements Finder {
 
     @Override
     public Token find(String input, int startIndex, int row, int column) {
-        StringBuilder lexeme = new StringBuilder();
-        int index = startIndex;
-        int startColumn = column;
-
-        while (index < input.length() && letterOrDigitPattern.matches(input.charAt(index))) {
-            lexeme.append(input.charAt(index));
-            index++;
-            column++;
-        }
-
-        String word = lexeme.toString();
-        TokenType type = KEYWORDS.get(word);
-
-        if (type == null) {
-            return null;
-        }
-
-        Span span = Span.of(new Position(row, startColumn), new Position(row, column));
-        return new Token(type, word, span);
+        Scan scan = consumeWhile(input, startIndex, row, column, letterOrDigitPattern);
+        TokenType type = KEYWORDS.get(scan.value());
+        return type == null ? null : new Token(type, scan.value(), scan.span());
     }
 }
