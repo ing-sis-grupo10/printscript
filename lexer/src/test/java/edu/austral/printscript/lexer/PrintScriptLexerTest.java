@@ -55,6 +55,7 @@ class PrintScriptLexerTest {
         assertEquals("cantidad", tokens.get(1).value());
         assertEquals("42", tokens.get(5).value());
     }
+
     @Test
     void tokenizesPrintlnWithString() {
         String source = "println(\"hola\");";
@@ -92,6 +93,7 @@ class PrintScriptLexerTest {
             }
         });
     }
+
     @Test
     void tokenizesIdentifierWithUnderscoreAndDigits() {
         String source = "let mi_variable2: number = 10;";
@@ -105,6 +107,7 @@ class PrintScriptLexerTest {
         assertEquals(TokenType.IDENTIFIER, tokens.get(1).type());
         assertEquals("mi_variable2", tokens.get(1).value());
     }
+
     @Test
     void tokenizesArithmeticExpression() {
         String source = "let resultado: number = a + b - c * d / e;";
@@ -139,6 +142,7 @@ class PrintScriptLexerTest {
             assertEquals(expectedTypes.get(i), tokens.get(i).type());
         }
     }
+
     @Test
     void tokenizesMultipleStatementsAcrossLines() {
         String source = "let a: number = 1;\nlet b: number = 2;";
@@ -150,7 +154,7 @@ class PrintScriptLexerTest {
         }
 
         assertEquals(15, tokens.size());
-        assertEquals(0, tokens.get(0).position().startRow());
-        assertEquals(1, tokens.get(7).position().startRow());
+        assertEquals(0, tokens.get(0).span().start().line());
+        assertEquals(1, tokens.get(7).span().start().line());
     }
 }
