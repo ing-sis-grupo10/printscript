@@ -1,8 +1,8 @@
 package printscript.ast;
 
 import org.junit.jupiter.api.Test;
-import printscript.diagnostics.Position;
-import printscript.diagnostics.Span;
+import edu.austral.printscript.common.token.Position;
+import edu.austral.printscript.common.token.Span;
 
 import java.math.BigDecimal;
 import java.util.Optional;

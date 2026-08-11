@@ -2,6 +2,7 @@ package edu.austral.printscript.lexer;
 
 import edu.austral.printscript.common.exception.InvalidTokenException;
 import edu.austral.printscript.common.token.Position;
+import edu.austral.printscript.common.token.Span;
 import edu.austral.printscript.common.token.Token;
 import edu.austral.printscript.common.token.TokenType;
 import edu.austral.printscript.lexer.finders.Finder;
@@ -82,14 +83,14 @@ public class PrintScriptLexer implements Iterator<Token> {
 
             char currentChar = currentLine.charAt(currentIndex);
             Token token = tryFinders(currentChar);
-            currentIndex = token.position().endColumn();
+            currentIndex = token.span().end().column();
             return token;
         }
 
         if (!eofEmitted) {
             eofEmitted = true;
-            Position position = new Position(currentRow, 0, currentRow, 0);
-            return new Token(TokenType.EOF, "", position);
+            Span span = Span.of(new Position(currentRow, 0), new Position(currentRow, 0));
+            return new Token(TokenType.EOF, "", span);
         }
 
         return null;
@@ -104,8 +105,8 @@ public class PrintScriptLexer implements Iterator<Token> {
                 }
             }
         }
-        Position position = new Position(currentRow, currentIndex, currentRow, currentIndex + 1);
-        throw new InvalidTokenException("Carácter no reconocido: '" + currentChar + "'", position);
+        Span span = Span.of(new Position(currentRow, currentIndex), new Position(currentRow, currentIndex + 1));
+        throw new InvalidTokenException("Carácter no reconocido: '" + currentChar + "'", span);
     }
 
     private void skipWhitespace() {

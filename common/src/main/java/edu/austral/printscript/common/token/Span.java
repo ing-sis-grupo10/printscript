@@ -1,4 +1,4 @@
-package printscript.diagnostics;
+package edu.austral.printscript.common.token;
 
 public record Span(Position start, Position end) {
     public static Span of(Position start, Position end) {

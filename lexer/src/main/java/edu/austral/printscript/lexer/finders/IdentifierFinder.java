@@ -1,6 +1,7 @@
 package edu.austral.printscript.lexer.finders;
 
 import edu.austral.printscript.common.token.Position;
+import edu.austral.printscript.common.token.Span;
 import edu.austral.printscript.common.token.Token;
 import edu.austral.printscript.common.token.TokenType;
 import edu.austral.printscript.lexer.patterns.LetterPattern;
@@ -30,7 +31,7 @@ public class IdentifierFinder implements Finder {
             column++;
         }
 
-        Position position = new Position(row, startColumn, row, column);
-        return new Token(TokenType.IDENTIFIER, lexeme.toString(), position);
+        Span span = Span.of(new Position(row, startColumn), new Position(row, column));
+        return new Token(TokenType.IDENTIFIER, lexeme.toString(), span);
     }
 }

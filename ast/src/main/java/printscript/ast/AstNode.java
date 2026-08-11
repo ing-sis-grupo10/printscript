@@ -1,6 +1,6 @@
 package printscript.ast;
 
-import printscript.diagnostics.Span;
+import edu.austral.printscript.common.token.Span;
 
 public sealed interface AstNode permits Statement, Expression {
     Span span();

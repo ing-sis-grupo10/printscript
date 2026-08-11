@@ -1,5 +1,7 @@
 package printscript.diagnostics;
 
+import edu.austral.printscript.common.token.Span;
+
 
 public record Diagnostic(Severity severity, String message, Span span) {
 

@@ -2,6 +2,7 @@ package edu.austral.printscript.lexer.finders;
 
 import edu.austral.printscript.common.exception.InvalidTokenException;
 import edu.austral.printscript.common.token.Position;
+import edu.austral.printscript.common.token.Span;
 import edu.austral.printscript.common.token.Token;
 import edu.austral.printscript.common.token.TokenType;
 
@@ -28,12 +29,12 @@ public class StringFinder implements Finder {
         }
 
         if (index >= input.length()) {
-            Position errorPosition = new Position(row, startColumn, row, column);
-            throw new InvalidTokenException("String sin cerrar", errorPosition);
+            Span errorSpan = Span.of(new Position(row, startColumn), new Position(row, column));
+            throw new InvalidTokenException("String sin cerrar", errorSpan);
         }
 
         column++;
-        Position position = new Position(row, startColumn, row, column);
-        return new Token(TokenType.STRING_LITERAL, lexeme.toString(), position);
+        Span span = Span.of(new Position(row, startColumn), new Position(row, column));
+        return new Token(TokenType.STRING_LITERAL, lexeme.toString(), span);
     }
 }

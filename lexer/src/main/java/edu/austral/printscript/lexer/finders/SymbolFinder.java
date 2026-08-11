@@ -1,6 +1,7 @@
 package edu.austral.printscript.lexer.finders;
 
 import edu.austral.printscript.common.token.Position;
+import edu.austral.printscript.common.token.Span;
 import edu.austral.printscript.common.token.Token;
 import edu.austral.printscript.common.token.TokenType;
 
@@ -29,7 +30,7 @@ public class SymbolFinder implements Finder {
     public Token find(String input, int startIndex, int row, int column) {
         char symbol = input.charAt(startIndex);
         TokenType type = SYMBOLS.get(symbol);
-        Position position = new Position(row, column, row, column + 1);
-        return new Token(type, String.valueOf(symbol), position);
+        Span span = Span.of(new Position(row, column), new Position(row, column + 1));
+        return new Token(type, String.valueOf(symbol), span);
     }
 }
