@@ -1,3 +1,4 @@
 dependencies {
-    // acá van dependencias específicas del parser, por ahora ninguna
+    implementation project(':ast')
+    implementation project(':diagnostics')
 }
