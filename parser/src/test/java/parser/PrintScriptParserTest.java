@@ -31,7 +31,7 @@ class PrintScriptParserTest {
         );
 
         var reporter = new CollectingDiagnosticReporter();
-        Parser parser = new PrintScriptParser(tokens.iterator(),
+        PrintScriptParser parser = new PrintScriptParser(tokens.iterator(),
                 List.of(new VariableDeclarationParser(), new AssignmentParser(), new PrintlnStatementParser()),
                 new PrecedenceClimbingExpressionParser(), reporter);
 
@@ -53,7 +53,7 @@ class PrintScriptParserTest {
         );
 
         var reporter = new CollectingDiagnosticReporter();
-        Parser parser = new PrintScriptParser(tokens.iterator(),
+        PrintScriptParser parser = new PrintScriptParser(tokens.iterator(),
                 List.of(new VariableDeclarationParser(), new AssignmentParser(), new PrintlnStatementParser()),
                 new PrecedenceClimbingExpressionParser(), reporter);
 
