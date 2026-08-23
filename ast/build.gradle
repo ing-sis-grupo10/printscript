@@ -1,3 +1,7 @@
+plugins {
+    id 'printscript.java-library-conventions'
+}
+
 dependencies {
     implementation project(':diagnostics')
     implementation project(':common')

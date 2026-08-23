@@ -1,0 +1,35 @@
+plugins {
+    id 'java-library'
+    id 'jacoco'
+    id 'printscript.java-common-conventions'
+}
+
+jacoco {
+    toolVersion = '0.8.11'
+}
+
+tasks.withType(Test).configureEach {
+    finalizedBy(tasks.named('jacocoTestReport'))
+}
+
+tasks.named('jacocoTestReport') {
+    dependsOn(tasks.named('test'))
+    reports {
+        xml.required.set(true)
+        html.required.set(true)
+        csv.required.set(false)
+    }
+}
+
+tasks.named('jacocoTestCoverageVerification') {
+    dependsOn(tasks.named('test'))
+    violationRules {
+        rule {
+            limit { minimum = 0.80 }
+        }
+    }
+}
+
+tasks.named('check') {
+    dependsOn(tasks.named('jacocoTestCoverageVerification'))
+}
