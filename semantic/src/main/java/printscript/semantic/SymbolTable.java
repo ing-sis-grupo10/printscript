@@ -1,6 +1,6 @@
 package printscript.semantic;
 
-import edu.austral.printscript.common.token.Span;
+import printscript.common.token.Span;
 import printscript.diagnostics.DiagnosticReporter;
 
 import java.util.Optional;
