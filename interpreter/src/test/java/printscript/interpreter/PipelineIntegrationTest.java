@@ -1,7 +1,9 @@
 package printscript.interpreter;
 
-import org.junit.jupiter.api.Test;
-import printscript.diagnostics.CollectingDiagnosticReporter;
+import printscript.ast.Statement;
+import printscript.common.result.Failure;
+import printscript.common.result.Result;
+import printscript.common.result.Success;
 import printscript.interpreter.handler.AssignmentHandler;
 import printscript.interpreter.handler.HandlerRegistry;
 import printscript.interpreter.handler.PrintlnStatementHandler;
@@ -16,6 +18,7 @@ import printscript.parser.PrintlnStatementParser;
 import printscript.parser.VariableDeclarationParser;
 import printscript.semantic.GlobalSymbolTable;
 import printscript.semantic.PrintScriptSemanticAnalyzer;
+import org.junit.jupiter.api.Test;
 
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
@@ -25,15 +28,18 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class PipelineIntegrationTest {
 
-    private String run(String source, CollectingDiagnosticReporter reporter) {
+    private record RunResult(String output, boolean hadFailure) {}
+
+    private RunResult run(String source) {
         var lexer = new PrintScriptLexer(new StringReader(source));
         var parser = new PrintScriptParser(lexer,
                 List.of(new VariableDeclarationParser(), new AssignmentParser(), new PrintlnStatementParser()),
-                new PrecedenceClimbingExpressionParser(), reporter);
-        var semanticAnalyzer = new PrintScriptSemanticAnalyzer(parser, new GlobalSymbolTable(), reporter);
+                new PrecedenceClimbingExpressionParser());
+        var semanticAnalyzer = new PrintScriptSemanticAnalyzer(parser, new GlobalSymbolTable());
 
         var output = new ByteArrayOutputStream();
         var evaluator = new ExpressionEvaluator();
@@ -42,13 +48,18 @@ class PipelineIntegrationTest {
                 new AssignmentHandler(evaluator),
                 new PrintlnStatementHandler(evaluator, new PrintStream(output))
         ));
-        Interpreter interpreter = new PrintScriptInterpreter(semanticAnalyzer, new GlobalEnvironment(), reporter, registry);
+        var interpreter = new PrintScriptInterpreter(semanticAnalyzer, new GlobalEnvironment(), registry);
 
+        boolean hadFailure = false;
         while (interpreter.hasNext()) {
-            interpreter.next();
+            Result<Statement> result = interpreter.next();
+            hadFailure |= switch (result) {
+                case Success<Statement> s -> false;
+                case Failure<Statement> f -> true;
+            };
         }
 
-        return output.toString(StandardCharsets.UTF_8).strip();
+        return new RunResult(output.toString(StandardCharsets.UTF_8).strip(), hadFailure);
     }
 
     @Test
@@ -59,11 +70,10 @@ class PipelineIntegrationTest {
             println(name + " " + lastName);
             """;
 
-        var reporter = new CollectingDiagnosticReporter();
-        String output = run(source, reporter);
+        RunResult result = run(source);
 
-        assertEquals("Joe Doe", output);
-        assertFalse(reporter.hasErrors());
+        assertEquals("Joe Doe", result.output());
+        assertFalse(result.hadFailure());
     }
 
     @Test
@@ -75,11 +85,10 @@ class PipelineIntegrationTest {
             println("Result: " + c);
             """;
 
-        var reporter = new CollectingDiagnosticReporter();
-        String output = run(source, reporter);
+        RunResult result = run(source);
 
-        assertEquals("Result: 3", output);
-        assertFalse(reporter.hasErrors());
+        assertEquals("Result: 3", result.output());
+        assertFalse(result.hadFailure());
     }
 
     @Test
@@ -91,10 +100,29 @@ class PipelineIntegrationTest {
             println("Result: " + a);
             """;
 
-        var reporter = new CollectingDiagnosticReporter();
-        String output = run(source, reporter);
+        RunResult result = run(source);
 
-        assertEquals("Result: 3", output);
-        assertFalse(reporter.hasErrors());
+        assertEquals("Result: 3", result.output());
+        assertFalse(result.hadFailure());
+    }
+
+    @Test
+    void divisionByZeroStopsExecutionBeforePrinting() {
+        // fix 8: la división por cero es un error de runtime que semantic NO detecta
+        // (a y b son ambas number, tipos correctos). Antes el evaluator devolvía
+        // ZERO en silencio y el println imprimía "0". Ahora falla, "c" nunca se
+        // define en el environment, y el println que la usa también falla —
+        // no se imprime nada.
+        String source = """
+            let a: number = 10;
+            let b: number = 0;
+            let c: number = a / b;
+            println(c);
+            """;
+
+        RunResult result = run(source);
+
+        assertTrue(result.hadFailure());
+        assertEquals("", result.output());
     }
 }

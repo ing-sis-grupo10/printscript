@@ -1,5 +1,9 @@
 package printscript.parser;
 
+import printscript.common.result.Diagnostic;
+import printscript.common.result.Failure;
+import printscript.common.result.Result;
+import printscript.common.result.Success;
 import printscript.common.token.Position;
 import printscript.common.token.Span;
 import printscript.common.token.Token;
@@ -9,10 +13,10 @@ import java.util.Iterator;
 
 class TokenStream {
 
-    private final Iterator<Token> source;
+    private final Iterator<Result<Token>> source;
     private Token current;
 
-    TokenStream(Iterator<Token> source) {
+    TokenStream(Iterator<Result<Token>> source) {
         this.source = source;
         this.current = advance();
     }
@@ -35,7 +39,17 @@ class TokenStream {
     }
 
     private Token advance() {
-        return source.hasNext() ? source.next() : eof();
+        if (!source.hasNext()) {
+            return eof();
+        }
+        Result<Token> result = source.next();
+        return switch (result) {
+            case Success<Token> s -> s.value();
+            case Failure<Token> f -> {
+                Diagnostic diagnostic = f.diagnostics().get(0);
+                throw new ParseError(diagnostic.message(), diagnostic.span());
+            }
+        };
     }
 
     private Token eof() {

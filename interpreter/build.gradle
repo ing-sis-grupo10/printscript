@@ -4,7 +4,6 @@ plugins {
 
 dependencies {
     implementation project(':ast')
-    implementation project(':diagnostics')
     implementation project(':common')
 
     testImplementation project(':lexer')
