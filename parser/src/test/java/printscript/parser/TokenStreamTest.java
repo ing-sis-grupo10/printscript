@@ -3,7 +3,6 @@ package printscript.parser;
 import printscript.common.token.Token;
 import printscript.common.token.TokenType;
 import org.junit.jupiter.api.Test;
-import printscript.parser.TokenStream;
 
 import java.util.List;
 

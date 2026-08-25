@@ -8,7 +8,6 @@ import printscript.common.token.Token;
 import printscript.common.token.TokenType;
 import org.junit.jupiter.api.Test;
 import printscript.diagnostics.CollectingDiagnosticReporter;
-import printscript.parser.*;
 
 import java.util.List;
 

@@ -8,9 +8,6 @@ import printscript.parser.PrintScriptParser;
 import printscript.parser.PrintlnStatementParser;
 import printscript.parser.VariableDeclarationParser;
 import printscript.diagnostics.CollectingDiagnosticReporter;
-import printscript.semantic.GlobalSymbolTable;
-import printscript.semantic.PrintScriptSemanticAnalyzer;
-import printscript.semantic.SemanticAnalyzer;
 
 import java.io.StringReader;
 import java.util.List;
