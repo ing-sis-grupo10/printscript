@@ -4,18 +4,13 @@ Este repo usa [pre-commit](https://pre-commit.com/) para correr chequeos automá
 
 ### Instalación (una sola vez por máquina)
 
-1. Instalar `pre-commit` (requiere Python):
+1. Instalar `pre-commit`:
    ```bash
-   pip install pre-commit
+   ./gradlew installGitHooks
    ```
-2. Desde la raíz del repo, instalar el hook en tu copia local:
+2. Desde la raíz del repo, para MAC:
    ```bash
-   pre-commit install
+   chmod +x .git/hooks/pre-commit
    ```
 
 A partir de ahí, cada `git commit` corre los hooks automáticamente. Si algún chequeo falla, el commit se cancela y hay que corregir antes de reintentar.
-
-Para correr los hooks manualmente sobre todos los archivos (sin hacer un commit):
-```bash
-pre-commit run --all-files
-```
