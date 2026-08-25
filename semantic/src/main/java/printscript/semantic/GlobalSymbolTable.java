@@ -3,20 +3,19 @@ package printscript.semantic;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
+import printscript.common.result.Diagnostic;
 import printscript.common.token.Span;
-import printscript.diagnostics.Diagnostic;
-import printscript.diagnostics.DiagnosticReporter;
 
 public final class GlobalSymbolTable implements SymbolTable {
     private final Map<String, Type> variables = new HashMap<>();
 
     @Override
-    public void declare(String name, Type type, Span declarationSite, DiagnosticReporter reporter) {
+    public Optional<Diagnostic> declare(String name, Type type, Span declarationSite) {
         if (variables.containsKey(name)) {
-            reporter.report(Diagnostic.error("Variable ya declarada: " + name, declarationSite));
-            return;
+            return Optional.of(Diagnostic.error("Variable ya declarada: " + name, declarationSite));
         }
         variables.put(name, type);
+        return Optional.empty();
     }
 
     @Override

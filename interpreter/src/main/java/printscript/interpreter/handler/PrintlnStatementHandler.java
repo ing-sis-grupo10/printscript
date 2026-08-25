@@ -3,7 +3,9 @@ package printscript.interpreter.handler;
 import java.io.PrintStream;
 import printscript.ast.PrintlnStatement;
 import printscript.ast.Statement;
-import printscript.diagnostics.DiagnosticReporter;
+import printscript.common.result.Failure;
+import printscript.common.result.Result;
+import printscript.common.result.Success;
 import printscript.interpreter.runtime.Environment;
 import printscript.interpreter.runtime.ExpressionEvaluator;
 import printscript.interpreter.runtime.RuntimeValue;
@@ -23,9 +25,15 @@ public final class PrintlnStatementHandler implements StatementHandler {
     }
 
     @Override
-    public void handle(Statement statement, Environment environment, DiagnosticReporter reporter) {
+    public Result<Statement> handle(Statement statement, Environment environment) {
         PrintlnStatement println = (PrintlnStatement) statement;
-        RuntimeValue value = evaluator.evaluate(println.argument(), environment, reporter);
-        out.println(evaluator.display(value));
+        Result<RuntimeValue> value = evaluator.evaluate(println.argument(), environment);
+        return switch (value) {
+            case Failure<RuntimeValue> f -> Result.failure(f.diagnostics());
+            case Success<RuntimeValue> s -> {
+                out.println(evaluator.display(s.value()));
+                yield Result.success(statement);
+            }
+        };
     }
 }

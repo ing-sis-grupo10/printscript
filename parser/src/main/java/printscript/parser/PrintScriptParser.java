@@ -3,26 +3,23 @@ package printscript.parser;
 import java.util.Iterator;
 import java.util.List;
 import printscript.ast.Statement;
+import printscript.common.result.Diagnostic;
+import printscript.common.result.Result;
 import printscript.common.token.Token;
 import printscript.common.token.TokenType;
-import printscript.diagnostics.Diagnostic;
-import printscript.diagnostics.DiagnosticReporter;
 
-public final class PrintScriptParser implements Iterator<Statement> {
+public final class PrintScriptParser implements Iterator<Result<Statement>> {
     private final TokenStream tokens;
     private final List<StatementParser> statementParsers;
     private final ExpressionParser expressionParser;
-    private final DiagnosticReporter reporter;
 
     public PrintScriptParser(
-            Iterator<Token> tokenSource,
+            Iterator<Result<Token>> tokenSource,
             List<StatementParser> statementParsers,
-            ExpressionParser expressionParser,
-            DiagnosticReporter reporter) {
+            ExpressionParser expressionParser) {
         this.tokens = new TokenStream(tokenSource);
         this.statementParsers = statementParsers;
         this.expressionParser = expressionParser;
-        this.reporter = reporter;
     }
 
     @Override
@@ -31,23 +28,22 @@ public final class PrintScriptParser implements Iterator<Statement> {
     }
 
     @Override
-    public Statement next() {
+    public Result<Statement> next() {
         for (StatementParser statementParser : statementParsers) {
             if (statementParser.canParse(tokens)) {
                 try {
-                    return statementParser.parse(tokens, expressionParser, reporter);
+                    return Result.success(statementParser.parse(tokens, expressionParser));
                 } catch (ParseError e) {
-                    reporter.report(Diagnostic.error(e.getMessage(), e.span()));
                     recoverToNextStatement();
-                    return next();
+                    return Result.failure(Diagnostic.error(e.getMessage(), e.span()));
                 }
             }
         }
 
         Token unexpected = tokens.consume();
-        reporter.report(
+        recoverToNextStatement();
+        return Result.failure(
                 Diagnostic.error("No se esperaba: " + unexpected.value(), unexpected.span()));
-        return next();
     }
 
     private void recoverToNextStatement() {

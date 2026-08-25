@@ -8,8 +8,6 @@ import printscript.ast.VariableDeclaration;
 import printscript.common.token.Span;
 import printscript.common.token.Token;
 import printscript.common.token.TokenType;
-import printscript.diagnostics.Diagnostic;
-import printscript.diagnostics.DiagnosticReporter;
 
 public final class VariableDeclarationParser implements StatementParser {
 
@@ -19,18 +17,17 @@ public final class VariableDeclarationParser implements StatementParser {
     }
 
     @Override
-    public Statement parse(
-            TokenStream tokens, ExpressionParser expressionParser, DiagnosticReporter reporter) {
-        Token letToken = tokens.consume(); // LET
+    public Statement parse(TokenStream tokens, ExpressionParser expressionParser) {
+        Token letToken = tokens.consume();
         Token nameToken = tokens.expect(TokenType.IDENTIFIER);
         tokens.expect(TokenType.COLON);
-        Token typeToken = tokens.consume(); // NUMBER_TYPE o STRING_TYPE
-        DeclaredType declaredType = parseDeclaredType(typeToken, reporter);
+        Token typeToken = tokens.consume();
+        DeclaredType declaredType = parseDeclaredType(typeToken);
 
         Optional<Expression> initializer = Optional.empty();
         if (tokens.peek().type() == TokenType.ASSIGN) {
-            tokens.consume(); // ASSIGN
-            initializer = Optional.of(expressionParser.parseExpression(tokens, reporter));
+            tokens.consume();
+            initializer = Optional.of(expressionParser.parseExpression(tokens));
         }
 
         Token semicolon = tokens.expect(TokenType.SEMICOLON);
@@ -39,16 +36,13 @@ public final class VariableDeclarationParser implements StatementParser {
         return new VariableDeclaration(nameToken.value(), declaredType, initializer, span);
     }
 
-    private DeclaredType parseDeclaredType(Token typeToken, DiagnosticReporter reporter) {
+    private DeclaredType parseDeclaredType(Token typeToken) {
         return switch (typeToken.type()) {
             case NUMBER_TYPE -> DeclaredType.NUMBER;
             case STRING_TYPE -> DeclaredType.STRING;
-            default -> {
-                reporter.report(
-                        Diagnostic.error(
-                                "Tipo desconocido: " + typeToken.value(), typeToken.span()));
-                yield DeclaredType.NUMBER;
-            }
+            default ->
+                    throw new ParseError(
+                            "Tipo desconocido: " + typeToken.value(), typeToken.span());
         };
     }
 }

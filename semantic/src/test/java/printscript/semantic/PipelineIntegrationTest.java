@@ -1,11 +1,16 @@
 package printscript.semantic;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.StringReader;
 import java.util.List;
 import org.junit.jupiter.api.Test;
-import printscript.diagnostics.CollectingDiagnosticReporter;
+import printscript.ast.Statement;
+import printscript.common.result.Failure;
+import printscript.common.result.Result;
+import printscript.common.result.Success;
 import printscript.lexer.PrintScriptLexer;
 import printscript.parser.AssignmentParser;
 import printscript.parser.PrecedenceClimbingExpressionParser;
@@ -15,7 +20,7 @@ import printscript.parser.VariableDeclarationParser;
 
 class PipelineIntegrationTest {
 
-    private SemanticAnalyzer pipelineFor(String source, CollectingDiagnosticReporter reporter) {
+    private PrintScriptSemanticAnalyzer pipelineFor(String source) {
         var lexer = new PrintScriptLexer(new StringReader(source));
         PrintScriptParser parser =
                 new PrintScriptParser(
@@ -24,14 +29,19 @@ class PipelineIntegrationTest {
                                 new VariableDeclarationParser(),
                                 new AssignmentParser(),
                                 new PrintlnStatementParser()),
-                        new PrecedenceClimbingExpressionParser(),
-                        reporter);
-        return new PrintScriptSemanticAnalyzer(parser, new GlobalSymbolTable(), reporter);
+                        new PrecedenceClimbingExpressionParser());
+        return new PrintScriptSemanticAnalyzer(parser, new GlobalSymbolTable());
+    }
+
+    private boolean isFailure(Result<Statement> result) {
+        return switch (result) {
+            case Success<Statement> s -> false;
+            case Failure<Statement> f -> true;
+        };
     }
 
     @Test
     void validProgramProducesNoDiagnostics() {
-        // el ejemplo 1 literal de la consigna
         String source =
                 """
             let name: string = "Joe";
@@ -39,45 +49,45 @@ class PipelineIntegrationTest {
             println(name + " " + lastName);
             """;
 
-        var reporter = new CollectingDiagnosticReporter();
-        var analyzer = pipelineFor(source, reporter);
+        var analyzer = pipelineFor(source);
 
         int statementCount = 0;
+        boolean anyFailure = false;
         while (analyzer.hasNext()) {
-            analyzer.next();
+            anyFailure |= isFailure(analyzer.next());
             statementCount++;
         }
 
         assertEquals(3, statementCount);
-        assertFalse(reporter.hasErrors());
+        assertFalse(anyFailure);
     }
 
     @Test
     void typeMismatchIsCaughtEndToEnd() {
         String source = "let x: number = \"esto no es un numero\";";
 
-        var reporter = new CollectingDiagnosticReporter();
-        var analyzer = pipelineFor(source, reporter);
+        var analyzer = pipelineFor(source);
 
+        boolean anyFailure = false;
         while (analyzer.hasNext()) {
-            analyzer.next();
+            anyFailure |= isFailure(analyzer.next());
         }
 
-        assertTrue(reporter.hasErrors());
+        assertTrue(anyFailure);
     }
 
     @Test
     void undeclaredVariableIsCaughtEndToEnd() {
         String source = "println(nuncaDeclarada);";
 
-        var reporter = new CollectingDiagnosticReporter();
-        var analyzer = pipelineFor(source, reporter);
+        var analyzer = pipelineFor(source);
 
+        boolean anyFailure = false;
         while (analyzer.hasNext()) {
-            analyzer.next();
+            anyFailure |= isFailure(analyzer.next());
         }
 
-        assertTrue(reporter.hasErrors());
+        assertTrue(anyFailure);
     }
 
     @Test
@@ -88,16 +98,19 @@ class PipelineIntegrationTest {
             println(x);
             """;
 
-        var reporter = new CollectingDiagnosticReporter();
-        var analyzer = pipelineFor(source, reporter);
+        var analyzer = pipelineFor(source);
 
         int statementCount = 0;
+        boolean anyFailure = false;
         while (analyzer.hasNext()) {
-            analyzer.next();
+            anyFailure |= isFailure(analyzer.next());
             statementCount++;
         }
 
-        assertTrue(reporter.hasErrors());
-        assertEquals(1, statementCount); // la línea rota se descarta entera, solo llega el println
+        assertTrue(anyFailure);
+        // la línea rota ahora es su propio Failure (statement 1), y el println
+        // que la sigue es un Success aparte (statement 2) — ya no se "esconden"
+        // los errores recursando hasta el próximo éxito, cada next() cuenta.
+        assertEquals(2, statementCount);
     }
 }

@@ -1,9 +1,8 @@
-package printscript.diagnostics;
+package printscript.common.result;
 
 import printscript.common.token.Span;
 
 public record Diagnostic(Severity severity, String message, Span span) {
-
     public static Diagnostic error(String message, Span span) {
         return new Diagnostic(Severity.ERROR, message, span);
     }

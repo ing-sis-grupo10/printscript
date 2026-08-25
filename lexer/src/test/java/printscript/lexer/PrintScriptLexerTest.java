@@ -1,17 +1,23 @@
 package printscript.lexer;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.*;
 
 import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.List;
 import org.junit.jupiter.api.Test;
-import printscript.common.exception.InvalidTokenException;
+import printscript.common.result.Failure;
+import printscript.common.result.Result;
+import printscript.common.result.Success;
 import printscript.common.token.Token;
 import printscript.common.token.TokenType;
 
 class PrintScriptLexerTest {
+
+    private Token expectSuccess(Result<Token> result) {
+        assertInstanceOf(Success.class, result);
+        return ((Success<Token>) result).value();
+    }
 
     @Test
     void tokenizesLetDeclaration() {
@@ -20,7 +26,7 @@ class PrintScriptLexerTest {
 
         List<Token> tokens = new ArrayList<>();
         while (lexer.hasNext()) {
-            tokens.add(lexer.next());
+            tokens.add(expectSuccess(lexer.next()));
         }
 
         List<TokenType> expectedTypes =
@@ -47,7 +53,7 @@ class PrintScriptLexerTest {
 
         List<Token> tokens = new ArrayList<>();
         while (lexer.hasNext()) {
-            tokens.add(lexer.next());
+            tokens.add(expectSuccess(lexer.next()));
         }
 
         assertEquals("let", tokens.get(0).value());
@@ -62,7 +68,7 @@ class PrintScriptLexerTest {
 
         List<Token> tokens = new ArrayList<>();
         while (lexer.hasNext()) {
-            tokens.add(lexer.next());
+            tokens.add(expectSuccess(lexer.next()));
         }
 
         List<TokenType> expectedTypes =
@@ -82,17 +88,18 @@ class PrintScriptLexerTest {
     }
 
     @Test
-    void throwsOnInvalidCharacter() {
+    void reportsInvalidCharacterAsFailure() {
         String source = "let x @ number;";
         PrintScriptLexer lexer = new PrintScriptLexer(new StringReader(source));
 
-        assertThrows(
-                InvalidTokenException.class,
-                () -> {
-                    while (lexer.hasNext()) {
-                        lexer.next();
-                    }
-                });
+        boolean foundFailure = false;
+        while (lexer.hasNext()) {
+            if (lexer.next() instanceof Failure<Token>) {
+                foundFailure = true;
+            }
+        }
+
+        assertTrue(foundFailure);
     }
 
     @Test
@@ -102,7 +109,7 @@ class PrintScriptLexerTest {
 
         List<Token> tokens = new ArrayList<>();
         while (lexer.hasNext()) {
-            tokens.add(lexer.next());
+            tokens.add(expectSuccess(lexer.next()));
         }
 
         assertEquals(TokenType.IDENTIFIER, tokens.get(1).type());
@@ -116,7 +123,7 @@ class PrintScriptLexerTest {
 
         List<Token> tokens = new ArrayList<>();
         while (lexer.hasNext()) {
-            tokens.add(lexer.next());
+            tokens.add(expectSuccess(lexer.next()));
         }
 
         List<TokenType> expectedTypes =
@@ -151,7 +158,7 @@ class PrintScriptLexerTest {
 
         List<Token> tokens = new ArrayList<>();
         while (lexer.hasNext()) {
-            tokens.add(lexer.next());
+            tokens.add(expectSuccess(lexer.next()));
         }
 
         assertEquals(15, tokens.size());

@@ -3,6 +3,5 @@ plugins {
 }
 
 dependencies {
-    implementation project(':diagnostics')
     implementation project(':common')
 }

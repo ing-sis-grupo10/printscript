@@ -1,24 +1,34 @@
 package printscript.semantic;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.Test;
-import printscript.ast.*;
+import printscript.ast.Assignment;
+import printscript.ast.BinaryExpression;
+import printscript.ast.BinaryOperator;
+import printscript.ast.DeclaredType;
+import printscript.ast.NumberLiteral;
+import printscript.ast.PrintlnStatement;
+import printscript.ast.Statement;
+import printscript.ast.StringLiteral;
+import printscript.ast.VariableDeclaration;
+import printscript.common.result.Failure;
+import printscript.common.result.Result;
+import printscript.common.result.Success;
 import printscript.common.token.Position;
 import printscript.common.token.Span;
-import printscript.diagnostics.CollectingDiagnosticReporter;
 
 class PrintScriptSemanticAnalyzerTest {
 
     private final Span span = Span.of(new Position(1, 0), new Position(1, 5));
 
-    private SemanticAnalyzer analyzerFor(
-            List<Statement> statements, CollectingDiagnosticReporter reporter) {
-        return new PrintScriptSemanticAnalyzer(
-                statements.iterator(), new GlobalSymbolTable(), reporter);
+    private PrintScriptSemanticAnalyzer analyzerFor(List<Statement> statements) {
+        List<Result<Statement>> wrapped =
+                statements.stream().map(Result::<Statement>success).toList();
+        return new PrintScriptSemanticAnalyzer(wrapped.iterator(), new GlobalSymbolTable());
     }
 
     @Test
@@ -30,12 +40,9 @@ class PrintScriptSemanticAnalyzerTest {
                         Optional.of(new NumberLiteral(BigDecimal.TEN, span)),
                         span);
 
-        var reporter = new CollectingDiagnosticReporter();
-        var analyzer = analyzerFor(List.of(declaration), reporter);
+        var analyzer = analyzerFor(List.of(declaration));
 
-        analyzer.next();
-
-        assertFalse(reporter.hasErrors());
+        assertInstanceOf(Success.class, analyzer.next());
     }
 
     @Test
@@ -47,24 +54,18 @@ class PrintScriptSemanticAnalyzerTest {
                         Optional.of(new StringLiteral("hola", span)),
                         span);
 
-        var reporter = new CollectingDiagnosticReporter();
-        var analyzer = analyzerFor(List.of(declaration), reporter);
+        var analyzer = analyzerFor(List.of(declaration));
 
-        analyzer.next();
-
-        assertTrue(reporter.hasErrors());
+        assertInstanceOf(Failure.class, analyzer.next());
     }
 
     @Test
     void reportsUndeclaredVariableInAssignment() {
         var assignment = new Assignment("x", new NumberLiteral(BigDecimal.ONE, span), span);
 
-        var reporter = new CollectingDiagnosticReporter();
-        var analyzer = analyzerFor(List.of(assignment), reporter);
+        var analyzer = analyzerFor(List.of(assignment));
 
-        analyzer.next();
-
-        assertTrue(reporter.hasErrors());
+        assertInstanceOf(Failure.class, analyzer.next());
     }
 
     @Test
@@ -78,13 +79,10 @@ class PrintScriptSemanticAnalyzerTest {
                         span);
         var println = new PrintlnStatement(concat, span);
 
-        var reporter = new CollectingDiagnosticReporter();
-        var analyzer = analyzerFor(List.of(declaration, println), reporter);
+        var analyzer = analyzerFor(List.of(declaration, println));
 
-        analyzer.next();
-        analyzer.next();
-
-        assertFalse(reporter.hasErrors());
+        assertInstanceOf(Success.class, analyzer.next());
+        assertInstanceOf(Success.class, analyzer.next());
     }
 
     @Test
@@ -97,12 +95,9 @@ class PrintScriptSemanticAnalyzerTest {
                         span);
         var println = new PrintlnStatement(expression, span);
 
-        var reporter = new CollectingDiagnosticReporter();
-        var analyzer = analyzerFor(List.of(println), reporter);
+        var analyzer = analyzerFor(List.of(println));
 
-        analyzer.next();
-
-        assertTrue(reporter.hasErrors());
+        assertInstanceOf(Failure.class, analyzer.next());
     }
 
     @Test
@@ -110,12 +105,9 @@ class PrintScriptSemanticAnalyzerTest {
         var first = new VariableDeclaration("x", DeclaredType.NUMBER, Optional.empty(), span);
         var second = new VariableDeclaration("x", DeclaredType.STRING, Optional.empty(), span);
 
-        var reporter = new CollectingDiagnosticReporter();
-        var analyzer = analyzerFor(List.of(first, second), reporter);
+        var analyzer = analyzerFor(List.of(first, second));
 
-        analyzer.next();
-        analyzer.next();
-
-        assertTrue(reporter.hasErrors());
+        assertInstanceOf(Success.class, analyzer.next());
+        assertInstanceOf(Failure.class, analyzer.next());
     }
 }

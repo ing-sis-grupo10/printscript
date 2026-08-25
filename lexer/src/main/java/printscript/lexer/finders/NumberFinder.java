@@ -1,5 +1,7 @@
 package printscript.lexer.finders;
 
+import java.util.Optional;
+import printscript.common.result.Result;
 import printscript.common.token.Position;
 import printscript.common.token.Span;
 import printscript.common.token.Token;
@@ -17,7 +19,7 @@ public class NumberFinder implements Finder {
     }
 
     @Override
-    public Token find(String input, int startIndex, int row, int column) {
+    public Optional<Result<Token>> find(String input, int startIndex, int row, int column) {
         StringBuilder value = new StringBuilder();
         int index = startIndex;
         int startColumn = column;
@@ -43,6 +45,7 @@ public class NumberFinder implements Finder {
         }
 
         Span span = Span.of(new Position(row, startColumn), new Position(row, column));
-        return new Token(TokenType.NUMBER_LITERAL, value.toString(), span);
+        return Optional.of(
+                Result.success(new Token(TokenType.NUMBER_LITERAL, value.toString(), span)));
     }
 }

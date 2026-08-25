@@ -1,6 +1,8 @@
 package printscript.lexer.finders;
 
-import printscript.common.exception.InvalidTokenException;
+import java.util.Optional;
+import printscript.common.result.Diagnostic;
+import printscript.common.result.Result;
 import printscript.common.token.Position;
 import printscript.common.token.Span;
 import printscript.common.token.Token;
@@ -14,7 +16,7 @@ public class StringFinder implements Finder {
     }
 
     @Override
-    public Token find(String input, int startIndex, int row, int column) {
+    public Optional<Result<Token>> find(String input, int startIndex, int row, int column) {
         char quote = input.charAt(startIndex);
         StringBuilder value = new StringBuilder();
         int index = startIndex + 1;
@@ -29,11 +31,12 @@ public class StringFinder implements Finder {
 
         if (index >= input.length()) {
             Span errorSpan = Span.of(new Position(row, startColumn), new Position(row, column));
-            throw new InvalidTokenException("String sin cerrar", errorSpan);
+            return Optional.of(Result.failure(Diagnostic.error("String sin cerrar", errorSpan)));
         }
 
         column++;
         Span span = Span.of(new Position(row, startColumn), new Position(row, column));
-        return new Token(TokenType.STRING_LITERAL, value.toString(), span);
+        return Optional.of(
+                Result.success(new Token(TokenType.STRING_LITERAL, value.toString(), span)));
     }
 }

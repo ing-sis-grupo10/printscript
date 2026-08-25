@@ -1,5 +1,7 @@
 package printscript.lexer.finders;
 
+import java.util.Optional;
+import printscript.common.result.Result;
 import printscript.common.token.Token;
 import printscript.common.token.TokenType;
 import printscript.lexer.patterns.LetterOrDigitPattern;
@@ -17,8 +19,9 @@ public class IdentifierFinder extends AbstractPatternFinder {
     }
 
     @Override
-    public Token find(String input, int startIndex, int row, int column) {
+    public Optional<Result<Token>> find(String input, int startIndex, int row, int column) {
         Scan scan = consumeWhile(input, startIndex, row, column, letterOrDigitPattern);
-        return new Token(TokenType.IDENTIFIER, scan.value(), scan.span());
+        return Optional.of(
+                Result.success(new Token(TokenType.IDENTIFIER, scan.value(), scan.span())));
     }
 }

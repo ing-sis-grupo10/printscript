@@ -1,6 +1,8 @@
 package printscript.lexer.finders;
 
 import java.util.Map;
+import java.util.Optional;
+import printscript.common.result.Result;
 import printscript.common.token.Position;
 import printscript.common.token.Span;
 import printscript.common.token.Token;
@@ -26,10 +28,10 @@ public class SymbolFinder implements Finder {
     }
 
     @Override
-    public Token find(String input, int startIndex, int row, int column) {
+    public Optional<Result<Token>> find(String input, int startIndex, int row, int column) {
         char symbol = input.charAt(startIndex);
         TokenType type = SYMBOLS.get(symbol);
         Span span = Span.of(new Position(row, column), new Position(row, column + 1));
-        return new Token(type, String.valueOf(symbol), span);
+        return Optional.of(Result.success(new Token(type, String.valueOf(symbol), span)));
     }
 }

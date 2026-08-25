@@ -6,7 +6,11 @@ import java.io.Reader;
 import java.util.Iterator;
 import java.util.List;
 import java.util.NoSuchElementException;
-import printscript.common.exception.InvalidTokenException;
+import java.util.Optional;
+import printscript.common.result.Diagnostic;
+import printscript.common.result.Failure;
+import printscript.common.result.Result;
+import printscript.common.result.Success;
 import printscript.common.token.Position;
 import printscript.common.token.Span;
 import printscript.common.token.Token;
@@ -18,7 +22,7 @@ import printscript.lexer.finders.NumberFinder;
 import printscript.lexer.finders.StringFinder;
 import printscript.lexer.finders.SymbolFinder;
 
-public class PrintScriptLexer implements Iterator<Token> {
+public class PrintScriptLexer implements Iterator<Result<Token>> {
 
     private final BufferedReader reader;
     private final List<Finder> finders =
@@ -33,7 +37,7 @@ public class PrintScriptLexer implements Iterator<Token> {
     private int currentIndex;
     private int currentRow;
     private boolean eofEmitted;
-    private Token nextToken;
+    private Result<Token> nextResult;
 
     public PrintScriptLexer(Reader reader) {
         this.reader = new BufferedReader(reader);
@@ -53,24 +57,24 @@ public class PrintScriptLexer implements Iterator<Token> {
 
     @Override
     public boolean hasNext() {
-        if (nextToken != null) {
+        if (nextResult != null) {
             return true;
         }
-        nextToken = findNextToken();
-        return nextToken != null;
+        nextResult = findNextResult();
+        return nextResult != null;
     }
 
     @Override
-    public Token next() {
+    public Result<Token> next() {
         if (!hasNext()) {
             throw new NoSuchElementException("No hay más tokens");
         }
-        Token token = nextToken;
-        nextToken = null;
-        return token;
+        Result<Token> result = nextResult;
+        nextResult = null;
+        return result;
     }
 
-    private Token findNextToken() {
+    private Result<Token> findNextResult() {
         while (currentLine != null) {
             skipWhitespace();
 
@@ -81,26 +85,27 @@ public class PrintScriptLexer implements Iterator<Token> {
             }
 
             char currentChar = currentLine.charAt(currentIndex);
-            Token token = tryFinders(currentChar);
-            currentIndex = token.span().end().column();
-            return token;
+            return tryFinders(currentChar);
         }
 
         if (!eofEmitted) {
             eofEmitted = true;
             Span span = Span.of(new Position(currentRow, 0), new Position(currentRow, 0));
-            return new Token(TokenType.EOF, "", span);
+            return Result.success(new Token(TokenType.EOF, "", span));
         }
 
         return null;
     }
 
-    private Token tryFinders(char currentChar) {
+    private Result<Token> tryFinders(char currentChar) {
         for (Finder finder : finders) {
             if (finder.canHandle(currentChar)) {
-                Token token = finder.find(currentLine, currentIndex, currentRow, currentIndex);
-                if (token != null) {
-                    return token;
+                Optional<Result<Token>> found =
+                        finder.find(currentLine, currentIndex, currentRow, currentIndex);
+                if (found.isPresent()) {
+                    Result<Token> result = found.get();
+                    currentIndex = endColumnOf(result);
+                    return result;
                 }
             }
         }
@@ -108,7 +113,16 @@ public class PrintScriptLexer implements Iterator<Token> {
                 Span.of(
                         new Position(currentRow, currentIndex),
                         new Position(currentRow, currentIndex + 1));
-        throw new InvalidTokenException("Carácter no reconocido: '" + currentChar + "'", span);
+        currentIndex++;
+        return Result.failure(
+                Diagnostic.error("Carácter no reconocido: '" + currentChar + "'", span));
+    }
+
+    private int endColumnOf(Result<Token> result) {
+        return switch (result) {
+            case Success<Token> s -> s.value().span().end().column();
+            case Failure<Token> f -> f.diagnostics().get(0).span().end().column();
+        };
     }
 
     private void skipWhitespace() {

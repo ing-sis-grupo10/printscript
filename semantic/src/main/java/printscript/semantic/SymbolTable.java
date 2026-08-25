@@ -1,11 +1,11 @@
 package printscript.semantic;
 
 import java.util.Optional;
+import printscript.common.result.Diagnostic;
 import printscript.common.token.Span;
-import printscript.diagnostics.DiagnosticReporter;
 
 public interface SymbolTable {
-    void declare(String name, Type type, Span declarationSite, DiagnosticReporter reporter);
+    Optional<Diagnostic> declare(String name, Type type, Span declarationSite);
 
     Optional<Type> lookup(String name);
 }

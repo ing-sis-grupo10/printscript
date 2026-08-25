@@ -2,7 +2,8 @@ package printscript.interpreter.handler;
 
 import java.util.List;
 import printscript.ast.Statement;
-import printscript.diagnostics.DiagnosticReporter;
+import printscript.common.result.Diagnostic;
+import printscript.common.result.Result;
 import printscript.interpreter.runtime.Environment;
 
 public final class HandlerRegistry {
@@ -12,15 +13,15 @@ public final class HandlerRegistry {
         this.handlers = handlers;
     }
 
-    public void dispatch(
-            Statement statement, Environment environment, DiagnosticReporter reporter) {
+    public Result<Statement> dispatch(Statement statement, Environment environment) {
         for (StatementHandler handler : handlers) {
             if (handler.canHandle(statement)) {
-                handler.handle(statement, environment, reporter);
-                return;
+                return handler.handle(statement, environment);
             }
         }
-        throw new IllegalStateException(
-                "No hay handler para: " + statement.getClass().getSimpleName());
+        return Result.failure(
+                Diagnostic.error(
+                        "No hay handler para: " + statement.getClass().getSimpleName(),
+                        statement.span()));
     }
 }

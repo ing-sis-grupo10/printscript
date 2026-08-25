@@ -5,7 +5,6 @@ import printscript.ast.Statement;
 import printscript.common.token.Span;
 import printscript.common.token.Token;
 import printscript.common.token.TokenType;
-import printscript.diagnostics.DiagnosticReporter;
 
 public final class PrintlnStatementParser implements StatementParser {
 
@@ -15,11 +14,10 @@ public final class PrintlnStatementParser implements StatementParser {
     }
 
     @Override
-    public Statement parse(
-            TokenStream tokens, ExpressionParser expressionParser, DiagnosticReporter reporter) {
-        Token printlnToken = tokens.consume(); // PRINTLN
+    public Statement parse(TokenStream tokens, ExpressionParser expressionParser) {
+        Token printlnToken = tokens.consume();
         tokens.expect(TokenType.LEFT_PAREN);
-        var argument = expressionParser.parseExpression(tokens, reporter);
+        var argument = expressionParser.parseExpression(tokens);
         tokens.expect(TokenType.RIGHT_PAREN);
         Token semicolon = tokens.expect(TokenType.SEMICOLON);
 
