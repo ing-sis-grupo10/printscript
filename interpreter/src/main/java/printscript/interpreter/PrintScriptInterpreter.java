@@ -1,11 +1,10 @@
 package printscript.interpreter;
 
+import java.util.Iterator;
 import printscript.ast.Statement;
 import printscript.diagnostics.DiagnosticReporter;
 import printscript.interpreter.handler.HandlerRegistry;
 import printscript.interpreter.runtime.Environment;
-
-import java.util.Iterator;
 
 public final class PrintScriptInterpreter implements Interpreter {
     private final Iterator<Statement> statements;
@@ -13,8 +12,11 @@ public final class PrintScriptInterpreter implements Interpreter {
     private final DiagnosticReporter reporter;
     private final HandlerRegistry handlers;
 
-    public PrintScriptInterpreter(Iterator<Statement> statements, Environment environment,
-                                  DiagnosticReporter reporter, HandlerRegistry handlers) {
+    public PrintScriptInterpreter(
+            Iterator<Statement> statements,
+            Environment environment,
+            DiagnosticReporter reporter,
+            HandlerRegistry handlers) {
         this.statements = statements;
         this.environment = environment;
         this.reporter = reporter;

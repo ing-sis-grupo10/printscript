@@ -1,16 +1,15 @@
 package printscript.parser;
 
-import printscript.common.token.Span;
-import printscript.common.token.Token;
-import printscript.common.token.TokenType;
+import java.util.Optional;
 import printscript.ast.DeclaredType;
 import printscript.ast.Expression;
 import printscript.ast.Statement;
 import printscript.ast.VariableDeclaration;
+import printscript.common.token.Span;
+import printscript.common.token.Token;
+import printscript.common.token.TokenType;
 import printscript.diagnostics.Diagnostic;
 import printscript.diagnostics.DiagnosticReporter;
-
-import java.util.Optional;
 
 public final class VariableDeclarationParser implements StatementParser {
 
@@ -20,11 +19,12 @@ public final class VariableDeclarationParser implements StatementParser {
     }
 
     @Override
-    public Statement parse(TokenStream tokens, ExpressionParser expressionParser, DiagnosticReporter reporter) {
-        Token letToken = tokens.consume();                    // LET
+    public Statement parse(
+            TokenStream tokens, ExpressionParser expressionParser, DiagnosticReporter reporter) {
+        Token letToken = tokens.consume(); // LET
         Token nameToken = tokens.expect(TokenType.IDENTIFIER);
         tokens.expect(TokenType.COLON);
-        Token typeToken = tokens.consume();                   // NUMBER_TYPE o STRING_TYPE
+        Token typeToken = tokens.consume(); // NUMBER_TYPE o STRING_TYPE
         DeclaredType declaredType = parseDeclaredType(typeToken, reporter);
 
         Optional<Expression> initializer = Optional.empty();
@@ -44,7 +44,9 @@ public final class VariableDeclarationParser implements StatementParser {
             case NUMBER_TYPE -> DeclaredType.NUMBER;
             case STRING_TYPE -> DeclaredType.STRING;
             default -> {
-                reporter.report(Diagnostic.error("Tipo desconocido: " + typeToken.value(), typeToken.span()));
+                reporter.report(
+                        Diagnostic.error(
+                                "Tipo desconocido: " + typeToken.value(), typeToken.span()));
                 yield DeclaredType.NUMBER;
             }
         };

@@ -1,29 +1,34 @@
 package printscript.semantic;
 
-import printscript.common.token.Position;
-import printscript.common.token.Span;
-import org.junit.jupiter.api.Test;
-import printscript.ast.*;
-import printscript.diagnostics.CollectingDiagnosticReporter;
+import static org.junit.jupiter.api.Assertions.*;
 
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
-
-import static org.junit.jupiter.api.Assertions.*;
+import org.junit.jupiter.api.Test;
+import printscript.ast.*;
+import printscript.common.token.Position;
+import printscript.common.token.Span;
+import printscript.diagnostics.CollectingDiagnosticReporter;
 
 class PrintScriptSemanticAnalyzerTest {
 
     private final Span span = Span.of(new Position(1, 0), new Position(1, 5));
 
-    private SemanticAnalyzer analyzerFor(List<Statement> statements, CollectingDiagnosticReporter reporter) {
-        return new PrintScriptSemanticAnalyzer(statements.iterator(), new GlobalSymbolTable(), reporter);
+    private SemanticAnalyzer analyzerFor(
+            List<Statement> statements, CollectingDiagnosticReporter reporter) {
+        return new PrintScriptSemanticAnalyzer(
+                statements.iterator(), new GlobalSymbolTable(), reporter);
     }
 
     @Test
     void acceptsDeclarationWithMatchingType() {
-        var declaration = new VariableDeclaration("x", DeclaredType.NUMBER,
-                Optional.of(new NumberLiteral(BigDecimal.TEN, span)), span);
+        var declaration =
+                new VariableDeclaration(
+                        "x",
+                        DeclaredType.NUMBER,
+                        Optional.of(new NumberLiteral(BigDecimal.TEN, span)),
+                        span);
 
         var reporter = new CollectingDiagnosticReporter();
         var analyzer = analyzerFor(List.of(declaration), reporter);
@@ -35,8 +40,12 @@ class PrintScriptSemanticAnalyzerTest {
 
     @Test
     void reportsTypeMismatchOnDeclaration() {
-        var declaration = new VariableDeclaration("x", DeclaredType.NUMBER,
-                Optional.of(new StringLiteral("hola", span)), span);
+        var declaration =
+                new VariableDeclaration(
+                        "x",
+                        DeclaredType.NUMBER,
+                        Optional.of(new StringLiteral("hola", span)),
+                        span);
 
         var reporter = new CollectingDiagnosticReporter();
         var analyzer = analyzerFor(List.of(declaration), reporter);
@@ -61,8 +70,12 @@ class PrintScriptSemanticAnalyzerTest {
     @Test
     void concatenatesNumberAndStringAsString() {
         var declaration = new VariableDeclaration("x", DeclaredType.NUMBER, Optional.empty(), span);
-        var concat = new BinaryExpression(
-                new StringLiteral("Result: ", span), BinaryOperator.PLUS, new NumberLiteral(BigDecimal.TEN, span), span);
+        var concat =
+                new BinaryExpression(
+                        new StringLiteral("Result: ", span),
+                        BinaryOperator.PLUS,
+                        new NumberLiteral(BigDecimal.TEN, span),
+                        span);
         var println = new PrintlnStatement(concat, span);
 
         var reporter = new CollectingDiagnosticReporter();
@@ -76,8 +89,12 @@ class PrintScriptSemanticAnalyzerTest {
 
     @Test
     void reportsArithmeticWithStringOperand() {
-        var expression = new BinaryExpression(
-                new StringLiteral("hola", span), BinaryOperator.MINUS, new NumberLiteral(BigDecimal.ONE, span), span);
+        var expression =
+                new BinaryExpression(
+                        new StringLiteral("hola", span),
+                        BinaryOperator.MINUS,
+                        new NumberLiteral(BigDecimal.ONE, span),
+                        span);
         var println = new PrintlnStatement(expression, span);
 
         var reporter = new CollectingDiagnosticReporter();

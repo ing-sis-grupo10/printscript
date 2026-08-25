@@ -1,6 +1,7 @@
 plugins {
     id 'java'
     id 'checkstyle'
+    id 'com.diffplug.spotless'
 }
 
 java {
@@ -26,3 +27,15 @@ checkstyle {
     configFile = rootProject.file('config/checkstyle/checkstyle.xml')
     maxWarnings = 0
 }
+
+spotless {
+    java {
+        googleJavaFormat().aosp()
+        removeUnusedImports()
+        trimTrailingWhitespace()
+        endWithNewline()
+    }
+}
+
+
+

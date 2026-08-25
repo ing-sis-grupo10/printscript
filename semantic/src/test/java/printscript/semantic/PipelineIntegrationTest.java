@@ -1,33 +1,39 @@
 package printscript.semantic;
 
-import printscript.lexer.PrintScriptLexer;
+import static org.junit.jupiter.api.Assertions.*;
+
+import java.io.StringReader;
+import java.util.List;
 import org.junit.jupiter.api.Test;
+import printscript.diagnostics.CollectingDiagnosticReporter;
+import printscript.lexer.PrintScriptLexer;
 import printscript.parser.AssignmentParser;
 import printscript.parser.PrecedenceClimbingExpressionParser;
 import printscript.parser.PrintScriptParser;
 import printscript.parser.PrintlnStatementParser;
 import printscript.parser.VariableDeclarationParser;
-import printscript.diagnostics.CollectingDiagnosticReporter;
-
-import java.io.StringReader;
-import java.util.List;
-
-import static org.junit.jupiter.api.Assertions.*;
 
 class PipelineIntegrationTest {
 
     private SemanticAnalyzer pipelineFor(String source, CollectingDiagnosticReporter reporter) {
         var lexer = new PrintScriptLexer(new StringReader(source));
-        PrintScriptParser parser = new PrintScriptParser(lexer,
-                List.of(new VariableDeclarationParser(), new AssignmentParser(), new PrintlnStatementParser()),
-                new PrecedenceClimbingExpressionParser(), reporter);
+        PrintScriptParser parser =
+                new PrintScriptParser(
+                        lexer,
+                        List.of(
+                                new VariableDeclarationParser(),
+                                new AssignmentParser(),
+                                new PrintlnStatementParser()),
+                        new PrecedenceClimbingExpressionParser(),
+                        reporter);
         return new PrintScriptSemanticAnalyzer(parser, new GlobalSymbolTable(), reporter);
     }
 
     @Test
     void validProgramProducesNoDiagnostics() {
         // el ejemplo 1 literal de la consigna
-        String source = """
+        String source =
+                """
             let name: string = "Joe";
             let lastName: string = "Doe";
             println(name + " " + lastName);

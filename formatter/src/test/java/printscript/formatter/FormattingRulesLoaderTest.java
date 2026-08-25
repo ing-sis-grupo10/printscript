@@ -1,12 +1,11 @@
 package printscript.formatter;
 
-import org.junit.jupiter.api.Test;
-
-import java.io.StringReader;
-
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+
+import java.io.StringReader;
+import org.junit.jupiter.api.Test;
 
 class FormattingRulesLoaderTest {
 
@@ -14,7 +13,8 @@ class FormattingRulesLoaderTest {
 
     @Test
     void loadsRulesFromJson() {
-        String json = """
+        String json =
+                """
                 {
                   "declaration_space_before_colon": false,
                   "declaration_space_after_colon": true,
@@ -42,7 +42,8 @@ class FormattingRulesLoaderTest {
 
     @Test
     void loaderClampsBlankLinesToMaxTwo() {
-        FormattingRules rules = loader.load(new StringReader("{\"println_new_lines_before_call\": 5}"));
+        FormattingRules rules =
+                loader.load(new StringReader("{\"println_new_lines_before_call\": 5}"));
 
         assertEquals(2, rules.blankLinesBeforePrintln());
     }

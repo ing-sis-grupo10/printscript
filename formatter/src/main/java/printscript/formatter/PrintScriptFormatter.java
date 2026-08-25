@@ -1,13 +1,12 @@
 package printscript.formatter;
 
-import printscript.common.token.Token;
-import printscript.common.token.TokenType;
-import printscript.lexer.PrintScriptLexer;
-
 import java.io.IOException;
 import java.io.Reader;
 import java.io.UncheckedIOException;
 import java.io.Writer;
+import printscript.common.token.Token;
+import printscript.common.token.TokenType;
+import printscript.lexer.PrintScriptLexer;
 
 public final class PrintScriptFormatter implements Formatter {
     private final FormattingRules rules;
@@ -71,7 +70,8 @@ public final class PrintScriptFormatter implements Formatter {
         if (previous.type() == TokenType.ASSIGN) {
             return rules.spaceAfterAssign() ? " " : "";
         }
-        if (current.type() == TokenType.LEFT_PAREN || previous.type() == TokenType.LEFT_PAREN
+        if (current.type() == TokenType.LEFT_PAREN
+                || previous.type() == TokenType.LEFT_PAREN
                 || current.type() == TokenType.RIGHT_PAREN) {
             return "";
         }
@@ -79,7 +79,9 @@ public final class PrintScriptFormatter implements Formatter {
     }
 
     private boolean isOperator(TokenType type) {
-        return type == TokenType.PLUS || type == TokenType.MINUS
-                || type == TokenType.STAR || type == TokenType.SLASH;
+        return type == TokenType.PLUS
+                || type == TokenType.MINUS
+                || type == TokenType.STAR
+                || type == TokenType.SLASH;
     }
 }

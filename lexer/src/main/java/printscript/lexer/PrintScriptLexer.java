@@ -1,5 +1,11 @@
 package printscript.lexer;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.Reader;
+import java.util.Iterator;
+import java.util.List;
+import java.util.NoSuchElementException;
 import printscript.common.exception.InvalidTokenException;
 import printscript.common.token.Position;
 import printscript.common.token.Span;
@@ -12,23 +18,16 @@ import printscript.lexer.finders.NumberFinder;
 import printscript.lexer.finders.StringFinder;
 import printscript.lexer.finders.SymbolFinder;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.Reader;
-import java.util.Iterator;
-import java.util.List;
-import java.util.NoSuchElementException;
-
 public class PrintScriptLexer implements Iterator<Token> {
 
     private final BufferedReader reader;
-    private final List<Finder> finders = List.of(
-            new KeywordFinder(),
-            new IdentifierFinder(),
-            new NumberFinder(),
-            new StringFinder(),
-            new SymbolFinder()
-    );
+    private final List<Finder> finders =
+            List.of(
+                    new KeywordFinder(),
+                    new IdentifierFinder(),
+                    new NumberFinder(),
+                    new StringFinder(),
+                    new SymbolFinder());
 
     private String currentLine;
     private int currentIndex;
@@ -105,12 +104,16 @@ public class PrintScriptLexer implements Iterator<Token> {
                 }
             }
         }
-        Span span = Span.of(new Position(currentRow, currentIndex), new Position(currentRow, currentIndex + 1));
+        Span span =
+                Span.of(
+                        new Position(currentRow, currentIndex),
+                        new Position(currentRow, currentIndex + 1));
         throw new InvalidTokenException("Carácter no reconocido: '" + currentChar + "'", span);
     }
 
     private void skipWhitespace() {
-        while (currentIndex < currentLine.length() && Character.isWhitespace(currentLine.charAt(currentIndex))) {
+        while (currentIndex < currentLine.length()
+                && Character.isWhitespace(currentLine.charAt(currentIndex))) {
             currentIndex++;
         }
     }

@@ -5,8 +5,7 @@ public record FormattingRules(
         boolean spaceAfterColon,
         boolean spaceBeforeAssign,
         boolean spaceAfterAssign,
-        int blankLinesBeforePrintln
-) {
+        int blankLinesBeforePrintln) {
     public static FormattingRules defaults() {
         return new FormattingRules(true, true, true, true, 1);
     }

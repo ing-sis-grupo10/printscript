@@ -2,7 +2,6 @@ package printscript.formatter;
 
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
-
 import java.io.Reader;
 
 public final class FormattingRulesLoader {
@@ -16,7 +15,11 @@ public final class FormattingRulesLoader {
         boolean spaceAfterAssign = getBoolean(json, "assignment_space_after_equals", true);
         int blankLinesBeforePrintln = getInt(json, "println_new_lines_before_call", 1);
 
-        return new FormattingRules(spaceBeforeColon, spaceAfterColon, spaceBeforeAssign, spaceAfterAssign,
+        return new FormattingRules(
+                spaceBeforeColon,
+                spaceAfterColon,
+                spaceBeforeAssign,
+                spaceAfterAssign,
                 Math.min(blankLinesBeforePrintln, 2));
     }
 

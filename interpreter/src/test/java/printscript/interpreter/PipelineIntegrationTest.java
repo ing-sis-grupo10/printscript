@@ -1,5 +1,13 @@
 package printscript.interpreter;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+
+import java.io.ByteArrayOutputStream;
+import java.io.PrintStream;
+import java.io.StringReader;
+import java.nio.charset.StandardCharsets;
+import java.util.List;
 import org.junit.jupiter.api.Test;
 import printscript.diagnostics.CollectingDiagnosticReporter;
 import printscript.interpreter.handler.AssignmentHandler;
@@ -17,32 +25,33 @@ import printscript.parser.VariableDeclarationParser;
 import printscript.semantic.GlobalSymbolTable;
 import printscript.semantic.PrintScriptSemanticAnalyzer;
 
-import java.io.ByteArrayOutputStream;
-import java.io.PrintStream;
-import java.io.StringReader;
-import java.nio.charset.StandardCharsets;
-import java.util.List;
-
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-
 class PipelineIntegrationTest {
 
     private String run(String source, CollectingDiagnosticReporter reporter) {
         var lexer = new PrintScriptLexer(new StringReader(source));
-        var parser = new PrintScriptParser(lexer,
-                List.of(new VariableDeclarationParser(), new AssignmentParser(), new PrintlnStatementParser()),
-                new PrecedenceClimbingExpressionParser(), reporter);
-        var semanticAnalyzer = new PrintScriptSemanticAnalyzer(parser, new GlobalSymbolTable(), reporter);
+        var parser =
+                new PrintScriptParser(
+                        lexer,
+                        List.of(
+                                new VariableDeclarationParser(),
+                                new AssignmentParser(),
+                                new PrintlnStatementParser()),
+                        new PrecedenceClimbingExpressionParser(),
+                        reporter);
+        var semanticAnalyzer =
+                new PrintScriptSemanticAnalyzer(parser, new GlobalSymbolTable(), reporter);
 
         var output = new ByteArrayOutputStream();
         var evaluator = new ExpressionEvaluator();
-        var registry = new HandlerRegistry(List.of(
-                new VariableDeclarationHandler(evaluator),
-                new AssignmentHandler(evaluator),
-                new PrintlnStatementHandler(evaluator, new PrintStream(output))
-        ));
-        Interpreter interpreter = new PrintScriptInterpreter(semanticAnalyzer, new GlobalEnvironment(), reporter, registry);
+        var registry =
+                new HandlerRegistry(
+                        List.of(
+                                new VariableDeclarationHandler(evaluator),
+                                new AssignmentHandler(evaluator),
+                                new PrintlnStatementHandler(evaluator, new PrintStream(output))));
+        Interpreter interpreter =
+                new PrintScriptInterpreter(
+                        semanticAnalyzer, new GlobalEnvironment(), reporter, registry);
 
         while (interpreter.hasNext()) {
             interpreter.next();
@@ -53,7 +62,8 @@ class PipelineIntegrationTest {
 
     @Test
     void example1ConcatenatesStrings() {
-        String source = """
+        String source =
+                """
             let name: string = "Joe";
             let lastName: string = "Doe";
             println(name + " " + lastName);
@@ -68,7 +78,8 @@ class PipelineIntegrationTest {
 
     @Test
     void example2DividesNumbersAndConcatenatesResult() {
-        String source = """
+        String source =
+                """
             let a: number = 12;
             let b: number = 4;
             let c: number = a / b;
@@ -84,7 +95,8 @@ class PipelineIntegrationTest {
 
     @Test
     void example3ReassignsVariableAfterDivision() {
-        String source = """
+        String source =
+                """
             let a: number = 12;
             let b: number = 4;
             a = a / b;

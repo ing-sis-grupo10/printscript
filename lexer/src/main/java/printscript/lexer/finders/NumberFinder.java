@@ -29,7 +29,10 @@ public class NumberFinder implements Finder {
                 value.append(c);
                 index++;
                 column++;
-            } else if (c == '.' && !seenDot && index + 1 < input.length() && digitPattern.matches(input.charAt(index + 1))) {
+            } else if (c == '.'
+                    && !seenDot
+                    && index + 1 < input.length()
+                    && digitPattern.matches(input.charAt(index + 1))) {
                 seenDot = true;
                 value.append(c);
                 index++;
