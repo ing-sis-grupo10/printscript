@@ -1,5 +1,8 @@
 package printscript.interpreter.runtime;
 
+import java.math.BigDecimal;
+import java.math.MathContext;
+import java.util.Optional;
 import printscript.ast.BinaryExpression;
 import printscript.ast.Expression;
 import printscript.ast.Identifier;
@@ -10,10 +13,6 @@ import printscript.common.result.Failure;
 import printscript.common.result.Result;
 import printscript.interpreter.runtime.RuntimeValue.NumberValue;
 import printscript.interpreter.runtime.RuntimeValue.StringValue;
-
-import java.math.BigDecimal;
-import java.math.MathContext;
-import java.util.Optional;
 
 public final class ExpressionEvaluator {
 
@@ -34,7 +33,8 @@ public final class ExpressionEvaluator {
         return Result.failure(Diagnostic.error("Variable no declarada: " + id.name(), id.span()));
     }
 
-    private Result<RuntimeValue> evaluateBinary(BinaryExpression expression, Environment environment) {
+    private Result<RuntimeValue> evaluateBinary(
+            BinaryExpression expression, Environment environment) {
         Result<RuntimeValue> leftResult = evaluate(expression.left(), environment);
         if (leftResult instanceof Failure<RuntimeValue> lf) {
             return lf;
@@ -45,7 +45,8 @@ public final class ExpressionEvaluator {
         }
 
         RuntimeValue left = ((printscript.common.result.Success<RuntimeValue>) leftResult).value();
-        RuntimeValue right = ((printscript.common.result.Success<RuntimeValue>) rightResult).value();
+        RuntimeValue right =
+                ((printscript.common.result.Success<RuntimeValue>) rightResult).value();
 
         return switch (expression.operator()) {
             case PLUS -> Result.success(evaluatePlus(left, right));
@@ -62,7 +63,8 @@ public final class ExpressionEvaluator {
         return new NumberValue(numberOf(left).add(numberOf(right)));
     }
 
-    private Result<RuntimeValue> evaluateDivide(BigDecimal left, BigDecimal right, BinaryExpression expression) {
+    private Result<RuntimeValue> evaluateDivide(
+            BigDecimal left, BigDecimal right, BinaryExpression expression) {
         if (right.compareTo(BigDecimal.ZERO) == 0) {
             return Result.failure(Diagnostic.error("División por cero", expression.span()));
         }

@@ -1,5 +1,12 @@
 package printscript.lexer;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.Reader;
+import java.util.Iterator;
+import java.util.List;
+import java.util.NoSuchElementException;
+import java.util.Optional;
 import printscript.common.result.Diagnostic;
 import printscript.common.result.Failure;
 import printscript.common.result.Result;
@@ -15,24 +22,16 @@ import printscript.lexer.finders.NumberFinder;
 import printscript.lexer.finders.StringFinder;
 import printscript.lexer.finders.SymbolFinder;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.Reader;
-import java.util.Iterator;
-import java.util.List;
-import java.util.NoSuchElementException;
-import java.util.Optional;
-
 public class PrintScriptLexer implements Iterator<Result<Token>> {
 
     private final BufferedReader reader;
-    private final List<Finder> finders = List.of(
-            new KeywordFinder(),
-            new IdentifierFinder(),
-            new NumberFinder(),
-            new StringFinder(),
-            new SymbolFinder()
-    );
+    private final List<Finder> finders =
+            List.of(
+                    new KeywordFinder(),
+                    new IdentifierFinder(),
+                    new NumberFinder(),
+                    new StringFinder(),
+                    new SymbolFinder());
 
     private String currentLine;
     private int currentIndex;
@@ -101,7 +100,8 @@ public class PrintScriptLexer implements Iterator<Result<Token>> {
     private Result<Token> tryFinders(char currentChar) {
         for (Finder finder : finders) {
             if (finder.canHandle(currentChar)) {
-                Optional<Result<Token>> found = finder.find(currentLine, currentIndex, currentRow, currentIndex);
+                Optional<Result<Token>> found =
+                        finder.find(currentLine, currentIndex, currentRow, currentIndex);
                 if (found.isPresent()) {
                     Result<Token> result = found.get();
                     currentIndex = endColumnOf(result);
@@ -109,9 +109,13 @@ public class PrintScriptLexer implements Iterator<Result<Token>> {
                 }
             }
         }
-        Span span = Span.of(new Position(currentRow, currentIndex), new Position(currentRow, currentIndex + 1));
+        Span span =
+                Span.of(
+                        new Position(currentRow, currentIndex),
+                        new Position(currentRow, currentIndex + 1));
         currentIndex++;
-        return Result.failure(Diagnostic.error("Carácter no reconocido: '" + currentChar + "'", span));
+        return Result.failure(
+                Diagnostic.error("Carácter no reconocido: '" + currentChar + "'", span));
     }
 
     private int endColumnOf(Result<Token> result) {
@@ -122,7 +126,8 @@ public class PrintScriptLexer implements Iterator<Result<Token>> {
     }
 
     private void skipWhitespace() {
-        while (currentIndex < currentLine.length() && Character.isWhitespace(currentLine.charAt(currentIndex))) {
+        while (currentIndex < currentLine.length()
+                && Character.isWhitespace(currentLine.charAt(currentIndex))) {
             currentIndex++;
         }
     }

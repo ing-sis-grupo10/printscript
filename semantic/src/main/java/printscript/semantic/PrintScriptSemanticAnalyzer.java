@@ -1,5 +1,9 @@
 package printscript.semantic;
 
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Optional;
 import printscript.ast.Assignment;
 import printscript.ast.BinaryExpression;
 import printscript.ast.DeclaredType;
@@ -15,16 +19,12 @@ import printscript.common.result.Failure;
 import printscript.common.result.Result;
 import printscript.common.result.Success;
 
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Optional;
-
 public final class PrintScriptSemanticAnalyzer implements Iterator<Result<Statement>> {
     private final Iterator<Result<Statement>> statements;
     private final SymbolTable symbols;
 
-    public PrintScriptSemanticAnalyzer(Iterator<Result<Statement>> statements, SymbolTable symbols) {
+    public PrintScriptSemanticAnalyzer(
+            Iterator<Result<Statement>> statements, SymbolTable symbols) {
         this.statements = statements;
         this.symbols = symbols;
     }
@@ -51,24 +51,34 @@ public final class PrintScriptSemanticAnalyzer implements Iterator<Result<Statem
     private List<Diagnostic> check(Statement statement) {
         List<Diagnostic> diagnostics = new ArrayList<>();
         switch (statement) {
-            case VariableDeclaration declaration -> checkVariableDeclaration(declaration, diagnostics);
+            case VariableDeclaration declaration ->
+                    checkVariableDeclaration(declaration, diagnostics);
             case Assignment assignment -> checkAssignment(assignment, diagnostics);
             case PrintlnStatement println -> typeOf(println.argument(), diagnostics);
         }
         return diagnostics;
     }
 
-    private void checkVariableDeclaration(VariableDeclaration declaration, List<Diagnostic> diagnostics) {
+    private void checkVariableDeclaration(
+            VariableDeclaration declaration, List<Diagnostic> diagnostics) {
         Type declaredType = toSemanticType(declaration.declaredType());
 
-        declaration.initializer().ifPresent(initializer -> {
-            Type initializerType = typeOf(initializer, diagnostics);
-            if (initializerType != Type.UNKNOWN && initializerType != declaredType) {
-                diagnostics.add(Diagnostic.error(
-                        "No se puede asignar " + initializerType + " a una variable de tipo " + declaredType,
-                        initializer.span()));
-            }
-        });
+        declaration
+                .initializer()
+                .ifPresent(
+                        initializer -> {
+                            Type initializerType = typeOf(initializer, diagnostics);
+                            if (initializerType != Type.UNKNOWN
+                                    && initializerType != declaredType) {
+                                diagnostics.add(
+                                        Diagnostic.error(
+                                                "No se puede asignar "
+                                                        + initializerType
+                                                        + " a una variable de tipo "
+                                                        + declaredType,
+                                                initializer.span()));
+                            }
+                        });
 
         symbols.declare(declaration.name(), declaredType, declaration.span())
                 .ifPresent(diagnostics::add);
@@ -79,15 +89,23 @@ public final class PrintScriptSemanticAnalyzer implements Iterator<Result<Statem
         Optional<Type> declaredType = symbols.lookup(assignment.name());
 
         if (declaredType.isEmpty()) {
-            diagnostics.add(Diagnostic.error("Variable no declarada: " + assignment.name(), assignment.span()));
+            diagnostics.add(
+                    Diagnostic.error(
+                            "Variable no declarada: " + assignment.name(), assignment.span()));
             return;
         }
 
         if (valueType != Type.UNKNOWN && valueType != declaredType.get()) {
-            diagnostics.add(Diagnostic.error(
-                    "No se puede asignar " + valueType + " a " + assignment.name()
-                            + " (declarada como " + declaredType.get() + ")",
-                    assignment.value().span()));
+            diagnostics.add(
+                    Diagnostic.error(
+                            "No se puede asignar "
+                                    + valueType
+                                    + " a "
+                                    + assignment.name()
+                                    + " (declarada como "
+                                    + declaredType.get()
+                                    + ")",
+                            assignment.value().span()));
         }
     }
 
@@ -95,11 +113,16 @@ public final class PrintScriptSemanticAnalyzer implements Iterator<Result<Statem
         return switch (expression) {
             case NumberLiteral n -> Type.NUMBER;
             case StringLiteral s -> Type.STRING;
-            case Identifier id -> symbols.lookup(id.name())
-                    .orElseGet(() -> {
-                        diagnostics.add(Diagnostic.error("Variable no declarada: " + id.name(), id.span()));
-                        return Type.UNKNOWN;
-                    });
+            case Identifier id ->
+                    symbols.lookup(id.name())
+                            .orElseGet(
+                                    () -> {
+                                        diagnostics.add(
+                                                Diagnostic.error(
+                                                        "Variable no declarada: " + id.name(),
+                                                        id.span()));
+                                        return Type.UNKNOWN;
+                                    });
             case BinaryExpression b -> typeOfBinary(b, diagnostics);
         };
     }
@@ -114,7 +137,8 @@ public final class PrintScriptSemanticAnalyzer implements Iterator<Result<Statem
 
         return switch (expression.operator()) {
             case PLUS -> typeOfPlus(leftType, rightType);
-            case MINUS, TIMES, DIVIDE -> typeOfArithmetic(leftType, rightType, expression, diagnostics);
+            case MINUS, TIMES, DIVIDE ->
+                    typeOfArithmetic(leftType, rightType, expression, diagnostics);
         };
     }
 
@@ -125,10 +149,13 @@ public final class PrintScriptSemanticAnalyzer implements Iterator<Result<Statem
         return Type.NUMBER;
     }
 
-    private Type typeOfArithmetic(Type left, Type right, BinaryExpression expression, List<Diagnostic> diagnostics) {
+    private Type typeOfArithmetic(
+            Type left, Type right, BinaryExpression expression, List<Diagnostic> diagnostics) {
         if (left != Type.NUMBER || right != Type.NUMBER) {
-            diagnostics.add(Diagnostic.error(
-                    "Los operandos de " + expression.operator() + " deben ser number", expression.span()));
+            diagnostics.add(
+                    Diagnostic.error(
+                            "Los operandos de " + expression.operator() + " deben ser number",
+                            expression.span()));
             return Type.UNKNOWN;
         }
         return Type.NUMBER;

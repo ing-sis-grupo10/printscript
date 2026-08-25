@@ -4,6 +4,10 @@ import java.io.IOException;
 import java.io.Reader;
 import java.io.UncheckedIOException;
 import java.io.Writer;
+import printscript.common.result.Diagnostic;
+import printscript.common.result.Failure;
+import printscript.common.result.Result;
+import printscript.common.result.Success;
 import printscript.common.token.Token;
 import printscript.common.token.TokenType;
 import printscript.lexer.PrintScriptLexer;
@@ -22,7 +26,7 @@ public final class PrintScriptFormatter implements Formatter {
             Token previous = null;
 
             while (lexer.hasNext()) {
-                Token current = lexer.next();
+                Token current = nextToken(lexer);
                 if (current.type() == TokenType.EOF) {
                     break;
                 }
@@ -36,6 +40,18 @@ public final class PrintScriptFormatter implements Formatter {
         } catch (IOException e) {
             throw new UncheckedIOException("Error escribiendo la salida formateada", e);
         }
+    }
+
+    private Token nextToken(PrintScriptLexer lexer) {
+        Result<Token> result = lexer.next();
+        return switch (result) {
+            case Success<Token> s -> s.value();
+            case Failure<Token> f -> {
+                Diagnostic diagnostic = f.diagnostics().get(0);
+                throw new IllegalArgumentException(
+                        "No se puede formatear, error léxico: " + diagnostic.message());
+            }
+        };
     }
 
     private String render(Token token) {

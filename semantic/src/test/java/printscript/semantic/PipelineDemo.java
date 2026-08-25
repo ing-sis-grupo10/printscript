@@ -1,5 +1,7 @@
 package printscript.semantic;
 
+import java.io.StringReader;
+import java.util.List;
 import printscript.ast.Statement;
 import printscript.common.result.Diagnostic;
 import printscript.common.result.Failure;
@@ -12,13 +14,11 @@ import printscript.parser.PrintScriptParser;
 import printscript.parser.PrintlnStatementParser;
 import printscript.parser.VariableDeclarationParser;
 
-import java.io.StringReader;
-import java.util.List;
-
 public class PipelineDemo {
 
     public static void main(String[] args) {
-        String source = """
+        String source =
+                """
             let name: string = "Joe";
             let lastName: string = "Doe";
             println(name + " " + lastName);
@@ -28,9 +28,14 @@ public class PipelineDemo {
         System.out.println(source);
 
         var lexer = new PrintScriptLexer(new StringReader(source));
-        PrintScriptParser parser = new PrintScriptParser(lexer,
-                List.of(new VariableDeclarationParser(), new AssignmentParser(), new PrintlnStatementParser()),
-                new PrecedenceClimbingExpressionParser());
+        PrintScriptParser parser =
+                new PrintScriptParser(
+                        lexer,
+                        List.of(
+                                new VariableDeclarationParser(),
+                                new AssignmentParser(),
+                                new PrintlnStatementParser()),
+                        new PrecedenceClimbingExpressionParser());
         var analyzer = new PrintScriptSemanticAnalyzer(parser, new GlobalSymbolTable());
 
         System.out.println("=== Procesando statement por statement ===");
@@ -44,7 +49,13 @@ public class PipelineDemo {
                 case Failure<Statement> f -> {
                     anyError = true;
                     for (Diagnostic diagnostic : f.diagnostics()) {
-                        System.out.println("  [" + diagnostic.severity() + "] " + diagnostic.message() + " en " + diagnostic.span());
+                        System.out.println(
+                                "  ["
+                                        + diagnostic.severity()
+                                        + "] "
+                                        + diagnostic.message()
+                                        + " en "
+                                        + diagnostic.span());
                     }
                 }
             }
@@ -53,8 +64,9 @@ public class PipelineDemo {
         }
 
         System.out.println("=== Resultado final ===");
-        System.out.println(anyError
-                ? "Se encontraron errores."
-                : "Programa válido — " + (i - 1) + " statements procesados sin errores.");
+        System.out.println(
+                anyError
+                        ? "Se encontraron errores."
+                        : "Programa válido — " + (i - 1) + " statements procesados sin errores.");
     }
 }

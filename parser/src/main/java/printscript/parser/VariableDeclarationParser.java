@@ -1,14 +1,13 @@
 package printscript.parser;
 
-import printscript.common.token.Span;
-import printscript.common.token.Token;
-import printscript.common.token.TokenType;
+import java.util.Optional;
 import printscript.ast.DeclaredType;
 import printscript.ast.Expression;
 import printscript.ast.Statement;
 import printscript.ast.VariableDeclaration;
-
-import java.util.Optional;
+import printscript.common.token.Span;
+import printscript.common.token.Token;
+import printscript.common.token.TokenType;
 
 public final class VariableDeclarationParser implements StatementParser {
 
@@ -41,7 +40,9 @@ public final class VariableDeclarationParser implements StatementParser {
         return switch (typeToken.type()) {
             case NUMBER_TYPE -> DeclaredType.NUMBER;
             case STRING_TYPE -> DeclaredType.STRING;
-            default -> throw new ParseError("Tipo desconocido: " + typeToken.value(), typeToken.span());
+            default ->
+                    throw new ParseError(
+                            "Tipo desconocido: " + typeToken.value(), typeToken.span());
         };
     }
 }

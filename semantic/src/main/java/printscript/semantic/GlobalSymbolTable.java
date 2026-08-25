@@ -1,11 +1,10 @@
 package printscript.semantic;
 
-import printscript.common.result.Diagnostic;
-import printscript.common.token.Span;
-
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
+import printscript.common.result.Diagnostic;
+import printscript.common.token.Span;
 
 public final class GlobalSymbolTable implements SymbolTable {
     private final Map<String, Type> variables = new HashMap<>();

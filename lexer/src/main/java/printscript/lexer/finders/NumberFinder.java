@@ -1,5 +1,6 @@
 package printscript.lexer.finders;
 
+import java.util.Optional;
 import printscript.common.result.Result;
 import printscript.common.token.Position;
 import printscript.common.token.Span;
@@ -7,8 +8,6 @@ import printscript.common.token.Token;
 import printscript.common.token.TokenType;
 import printscript.lexer.patterns.DigitPattern;
 import printscript.lexer.patterns.Pattern;
-
-import java.util.Optional;
 
 public class NumberFinder implements Finder {
 
@@ -46,6 +45,7 @@ public class NumberFinder implements Finder {
         }
 
         Span span = Span.of(new Position(row, startColumn), new Position(row, column));
-        return Optional.of(Result.success(new Token(TokenType.NUMBER_LITERAL, value.toString(), span)));
+        return Optional.of(
+                Result.success(new Token(TokenType.NUMBER_LITERAL, value.toString(), span)));
     }
 }

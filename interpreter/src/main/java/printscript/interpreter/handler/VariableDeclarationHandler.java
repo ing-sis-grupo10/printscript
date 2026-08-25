@@ -28,7 +28,8 @@ public final class VariableDeclarationHandler implements StatementHandler {
             return Result.success(statement);
         }
 
-        Result<RuntimeValue> value = evaluator.evaluate(declaration.initializer().get(), environment);
+        Result<RuntimeValue> value =
+                evaluator.evaluate(declaration.initializer().get(), environment);
         return switch (value) {
             case Failure<RuntimeValue> f -> Result.failure(f.diagnostics());
             case Success<RuntimeValue> s -> {

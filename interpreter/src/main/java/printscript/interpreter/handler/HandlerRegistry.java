@@ -1,11 +1,10 @@
 package printscript.interpreter.handler;
 
+import java.util.List;
 import printscript.ast.Statement;
 import printscript.common.result.Diagnostic;
 import printscript.common.result.Result;
 import printscript.interpreter.runtime.Environment;
-
-import java.util.List;
 
 public final class HandlerRegistry {
     private final List<StatementHandler> handlers;
@@ -20,7 +19,9 @@ public final class HandlerRegistry {
                 return handler.handle(statement, environment);
             }
         }
-        return Result.failure(Diagnostic.error(
-                "No hay handler para: " + statement.getClass().getSimpleName(), statement.span()));
+        return Result.failure(
+                Diagnostic.error(
+                        "No hay handler para: " + statement.getClass().getSimpleName(),
+                        statement.span()));
     }
 }

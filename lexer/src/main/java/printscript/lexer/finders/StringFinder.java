@@ -1,13 +1,12 @@
 package printscript.lexer.finders;
 
+import java.util.Optional;
 import printscript.common.result.Diagnostic;
 import printscript.common.result.Result;
 import printscript.common.token.Position;
 import printscript.common.token.Span;
 import printscript.common.token.Token;
 import printscript.common.token.TokenType;
-
-import java.util.Optional;
 
 public class StringFinder implements Finder {
 
@@ -37,6 +36,7 @@ public class StringFinder implements Finder {
 
         column++;
         Span span = Span.of(new Position(row, startColumn), new Position(row, column));
-        return Optional.of(Result.success(new Token(TokenType.STRING_LITERAL, value.toString(), span)));
+        return Optional.of(
+                Result.success(new Token(TokenType.STRING_LITERAL, value.toString(), span)));
     }
 }

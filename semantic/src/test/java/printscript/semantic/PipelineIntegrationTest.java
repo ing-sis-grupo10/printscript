@@ -1,5 +1,12 @@
 package printscript.semantic;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
+import java.io.StringReader;
+import java.util.List;
+import org.junit.jupiter.api.Test;
 import printscript.ast.Statement;
 import printscript.common.result.Failure;
 import printscript.common.result.Result;
@@ -10,22 +17,19 @@ import printscript.parser.PrecedenceClimbingExpressionParser;
 import printscript.parser.PrintScriptParser;
 import printscript.parser.PrintlnStatementParser;
 import printscript.parser.VariableDeclarationParser;
-import org.junit.jupiter.api.Test;
-
-import java.io.StringReader;
-import java.util.List;
-
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class PipelineIntegrationTest {
 
     private PrintScriptSemanticAnalyzer pipelineFor(String source) {
         var lexer = new PrintScriptLexer(new StringReader(source));
-        PrintScriptParser parser = new PrintScriptParser(lexer,
-                List.of(new VariableDeclarationParser(), new AssignmentParser(), new PrintlnStatementParser()),
-                new PrecedenceClimbingExpressionParser());
+        PrintScriptParser parser =
+                new PrintScriptParser(
+                        lexer,
+                        List.of(
+                                new VariableDeclarationParser(),
+                                new AssignmentParser(),
+                                new PrintlnStatementParser()),
+                        new PrecedenceClimbingExpressionParser());
         return new PrintScriptSemanticAnalyzer(parser, new GlobalSymbolTable());
     }
 
@@ -38,7 +42,8 @@ class PipelineIntegrationTest {
 
     @Test
     void validProgramProducesNoDiagnostics() {
-        String source = """
+        String source =
+                """
             let name: string = "Joe";
             let lastName: string = "Doe";
             println(name + " " + lastName);

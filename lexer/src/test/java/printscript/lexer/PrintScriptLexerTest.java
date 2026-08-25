@@ -1,17 +1,16 @@
 package printscript.lexer;
 
+import static org.junit.jupiter.api.Assertions.*;
+
+import java.io.StringReader;
+import java.util.ArrayList;
+import java.util.List;
+import org.junit.jupiter.api.Test;
 import printscript.common.result.Failure;
 import printscript.common.result.Result;
 import printscript.common.result.Success;
 import printscript.common.token.Token;
 import printscript.common.token.TokenType;
-import org.junit.jupiter.api.Test;
-
-import java.io.StringReader;
-import java.util.ArrayList;
-import java.util.List;
-
-import static org.junit.jupiter.api.Assertions.*;
 
 class PrintScriptLexerTest {
 
@@ -30,10 +29,16 @@ class PrintScriptLexerTest {
             tokens.add(expectSuccess(lexer.next()));
         }
 
-        List<TokenType> expectedTypes = List.of(
-                TokenType.LET, TokenType.IDENTIFIER, TokenType.COLON, TokenType.NUMBER_TYPE,
-                TokenType.ASSIGN, TokenType.NUMBER_LITERAL, TokenType.SEMICOLON, TokenType.EOF
-        );
+        List<TokenType> expectedTypes =
+                List.of(
+                        TokenType.LET,
+                        TokenType.IDENTIFIER,
+                        TokenType.COLON,
+                        TokenType.NUMBER_TYPE,
+                        TokenType.ASSIGN,
+                        TokenType.NUMBER_LITERAL,
+                        TokenType.SEMICOLON,
+                        TokenType.EOF);
 
         assertEquals(expectedTypes.size(), tokens.size());
         for (int i = 0; i < expectedTypes.size(); i++) {
@@ -66,10 +71,14 @@ class PrintScriptLexerTest {
             tokens.add(expectSuccess(lexer.next()));
         }
 
-        List<TokenType> expectedTypes = List.of(
-                TokenType.PRINTLN, TokenType.LEFT_PAREN, TokenType.STRING_LITERAL,
-                TokenType.RIGHT_PAREN, TokenType.SEMICOLON, TokenType.EOF
-        );
+        List<TokenType> expectedTypes =
+                List.of(
+                        TokenType.PRINTLN,
+                        TokenType.LEFT_PAREN,
+                        TokenType.STRING_LITERAL,
+                        TokenType.RIGHT_PAREN,
+                        TokenType.SEMICOLON,
+                        TokenType.EOF);
 
         assertEquals(expectedTypes.size(), tokens.size());
         for (int i = 0; i < expectedTypes.size(); i++) {
@@ -117,12 +126,24 @@ class PrintScriptLexerTest {
             tokens.add(expectSuccess(lexer.next()));
         }
 
-        List<TokenType> expectedTypes = List.of(
-                TokenType.LET, TokenType.IDENTIFIER, TokenType.COLON, TokenType.NUMBER_TYPE, TokenType.ASSIGN,
-                TokenType.IDENTIFIER, TokenType.PLUS, TokenType.IDENTIFIER, TokenType.MINUS,
-                TokenType.IDENTIFIER, TokenType.STAR, TokenType.IDENTIFIER, TokenType.SLASH,
-                TokenType.IDENTIFIER, TokenType.SEMICOLON, TokenType.EOF
-        );
+        List<TokenType> expectedTypes =
+                List.of(
+                        TokenType.LET,
+                        TokenType.IDENTIFIER,
+                        TokenType.COLON,
+                        TokenType.NUMBER_TYPE,
+                        TokenType.ASSIGN,
+                        TokenType.IDENTIFIER,
+                        TokenType.PLUS,
+                        TokenType.IDENTIFIER,
+                        TokenType.MINUS,
+                        TokenType.IDENTIFIER,
+                        TokenType.STAR,
+                        TokenType.IDENTIFIER,
+                        TokenType.SLASH,
+                        TokenType.IDENTIFIER,
+                        TokenType.SEMICOLON,
+                        TokenType.EOF);
 
         assertEquals(expectedTypes.size(), tokens.size());
         for (int i = 0; i < expectedTypes.size(); i++) {

@@ -1,22 +1,21 @@
 package printscript.lexer.finders;
 
+import java.util.Map;
+import java.util.Optional;
 import printscript.common.result.Result;
 import printscript.common.token.Token;
 import printscript.common.token.TokenType;
 import printscript.lexer.patterns.LetterOrDigitPattern;
 import printscript.lexer.patterns.Pattern;
 
-import java.util.Map;
-import java.util.Optional;
-
 public class KeywordFinder extends AbstractPatternFinder {
 
-    private static final Map<String, TokenType> KEYWORDS = Map.of(
-            "let", TokenType.LET,
-            "number", TokenType.NUMBER_TYPE,
-            "string", TokenType.STRING_TYPE,
-            "println", TokenType.PRINTLN
-    );
+    private static final Map<String, TokenType> KEYWORDS =
+            Map.of(
+                    "let", TokenType.LET,
+                    "number", TokenType.NUMBER_TYPE,
+                    "string", TokenType.STRING_TYPE,
+                    "println", TokenType.PRINTLN);
 
     private final Pattern letterOrDigitPattern = new LetterOrDigitPattern();
 

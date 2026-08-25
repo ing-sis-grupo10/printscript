@@ -1,21 +1,22 @@
 package printscript.parser;
 
+import java.util.Iterator;
+import java.util.List;
 import printscript.ast.Statement;
 import printscript.common.result.Diagnostic;
 import printscript.common.result.Result;
 import printscript.common.token.Token;
 import printscript.common.token.TokenType;
 
-import java.util.Iterator;
-import java.util.List;
-
 public final class PrintScriptParser implements Iterator<Result<Statement>> {
     private final TokenStream tokens;
     private final List<StatementParser> statementParsers;
     private final ExpressionParser expressionParser;
 
-    public PrintScriptParser(Iterator<Result<Token>> tokenSource, List<StatementParser> statementParsers,
-                             ExpressionParser expressionParser) {
+    public PrintScriptParser(
+            Iterator<Result<Token>> tokenSource,
+            List<StatementParser> statementParsers,
+            ExpressionParser expressionParser) {
         this.tokens = new TokenStream(tokenSource);
         this.statementParsers = statementParsers;
         this.expressionParser = expressionParser;
@@ -41,7 +42,8 @@ public final class PrintScriptParser implements Iterator<Result<Statement>> {
 
         Token unexpected = tokens.consume();
         recoverToNextStatement();
-        return Result.failure(Diagnostic.error("No se esperaba: " + unexpected.value(), unexpected.span()));
+        return Result.failure(
+                Diagnostic.error("No se esperaba: " + unexpected.value(), unexpected.span()));
     }
 
     private void recoverToNextStatement() {

@@ -1,10 +1,10 @@
 package printscript.parser;
 
+import printscript.ast.PrintlnStatement;
+import printscript.ast.Statement;
 import printscript.common.token.Span;
 import printscript.common.token.Token;
 import printscript.common.token.TokenType;
-import printscript.ast.PrintlnStatement;
-import printscript.ast.Statement;
 
 public final class PrintlnStatementParser implements StatementParser {
 
