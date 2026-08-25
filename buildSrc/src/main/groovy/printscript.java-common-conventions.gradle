@@ -1,5 +1,7 @@
 plugins {
     id 'java'
+    id 'checkstyle'
+    id 'com.diffplug.spotless'
 }
 
 java {
@@ -19,3 +21,21 @@ dependencies {
 tasks.test {
     useJUnitPlatform()
 }
+
+checkstyle {
+    toolVersion = '10.12.5'
+    configFile = rootProject.file('config/checkstyle/checkstyle.xml')
+    maxWarnings = 0
+}
+
+spotless {
+    java {
+        googleJavaFormat().aosp()
+        removeUnusedImports()
+        trimTrailingWhitespace()
+        endWithNewline()
+    }
+}
+
+
+

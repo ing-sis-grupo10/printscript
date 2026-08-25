@@ -1,13 +1,12 @@
 package printscript.ast;
 
-import org.junit.jupiter.api.Test;
-import printscript.common.token.Position;
-import printscript.common.token.Span;
+import static org.junit.jupiter.api.Assertions.*;
 
 import java.math.BigDecimal;
 import java.util.Optional;
-
-import static org.junit.jupiter.api.Assertions.*;
+import org.junit.jupiter.api.Test;
+import printscript.common.token.Position;
+import printscript.common.token.Span;
 
 class AstTest {
 
@@ -55,6 +54,7 @@ class AstTest {
 
         assertEquals("number:10", describe(number));
     }
+
     @Test
     void identifierHoldsItsName() {
         var identifier = new Identifier("x", span);
@@ -85,6 +85,7 @@ class AstTest {
 
         assertEquals(argument, println.argument());
     }
+
     @Test
     void switchOverExpressionCoversStringAndIdentifier() {
         assertEquals("string:hola", describe(new StringLiteral("hola", span)));

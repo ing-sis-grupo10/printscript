@@ -1,5 +1,6 @@
 package printscript.interpreter.handler;
 
+import java.io.PrintStream;
 import printscript.ast.PrintlnStatement;
 import printscript.ast.Statement;
 import printscript.common.result.Failure;
@@ -8,8 +9,6 @@ import printscript.common.result.Success;
 import printscript.interpreter.runtime.Environment;
 import printscript.interpreter.runtime.ExpressionEvaluator;
 import printscript.interpreter.runtime.RuntimeValue;
-
-import java.io.PrintStream;
 
 public final class PrintlnStatementHandler implements StatementHandler {
     private final ExpressionEvaluator evaluator;

@@ -11,7 +11,8 @@ abstract class AbstractPatternFinder implements Finder {
 
     protected record Scan(String value, Span span) {}
 
-    protected Scan consumeWhile(String input, int startIndex, int row, int column, Pattern pattern) {
+    protected Scan consumeWhile(
+            String input, int startIndex, int row, int column, Pattern pattern) {
         StringBuilder value = new StringBuilder();
         int index = startIndex;
         int startColumn = column;

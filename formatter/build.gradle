@@ -1,3 +1,9 @@
 plugins {
     id 'printscript.java-library-conventions'
 }
+
+dependencies {
+    implementation project(':lexer')
+    implementation project(':common')
+    implementation 'com.google.code.gson:gson:2.10.1'
+}
