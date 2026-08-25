@@ -22,9 +22,13 @@ public final class VariableDeclarationHandler implements StatementHandler {
     @Override
     public void handle(Statement statement, Environment environment, DiagnosticReporter reporter) {
         VariableDeclaration declaration = (VariableDeclaration) statement;
-        declaration.initializer().ifPresent(initializer -> {
-            RuntimeValue value = evaluator.evaluate(initializer, environment, reporter);
-            environment.define(declaration.name(), value);
-        });
+        declaration
+                .initializer()
+                .ifPresent(
+                        initializer -> {
+                            RuntimeValue value =
+                                    evaluator.evaluate(initializer, environment, reporter);
+                            environment.define(declaration.name(), value);
+                        });
     }
 }

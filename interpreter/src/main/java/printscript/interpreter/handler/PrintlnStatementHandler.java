@@ -1,13 +1,12 @@
 package printscript.interpreter.handler;
 
+import java.io.PrintStream;
 import printscript.ast.PrintlnStatement;
 import printscript.ast.Statement;
 import printscript.diagnostics.DiagnosticReporter;
 import printscript.interpreter.runtime.Environment;
 import printscript.interpreter.runtime.ExpressionEvaluator;
 import printscript.interpreter.runtime.RuntimeValue;
-
-import java.io.PrintStream;
 
 public final class PrintlnStatementHandler implements StatementHandler {
     private final ExpressionEvaluator evaluator;

@@ -1,11 +1,10 @@
 package printscript.parser;
 
+import java.util.Iterator;
 import printscript.common.token.Position;
 import printscript.common.token.Span;
 import printscript.common.token.Token;
 import printscript.common.token.TokenType;
-
-import java.util.Iterator;
 
 class TokenStream {
 
@@ -29,7 +28,8 @@ class TokenStream {
 
     Token expect(TokenType type) {
         if (current.type() != type) {
-            throw new ParseError("Expected " + type + " but found " + current.type(), current.span());
+            throw new ParseError(
+                    "Expected " + type + " but found " + current.type(), current.span());
         }
         return consume();
     }
@@ -39,9 +39,8 @@ class TokenStream {
     }
 
     private Token eof() {
-        Span eofSpan = current == null
-                ? Span.of(new Position(0, 0), new Position(0, 0))
-                : current.span();
+        Span eofSpan =
+                current == null ? Span.of(new Position(0, 0), new Position(0, 0)) : current.span();
         return new Token(TokenType.EOF, "", eofSpan);
     }
 }

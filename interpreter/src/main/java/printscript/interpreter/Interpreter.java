@@ -1,12 +1,6 @@
 package printscript.interpreter;
 
+import java.util.Iterator;
 import printscript.ast.Statement;
 
-import java.util.Iterator;
-
-public interface Interpreter extends Iterator<Statement> {
-
-}
-
-
-
+public interface Interpreter extends Iterator<Statement> {}

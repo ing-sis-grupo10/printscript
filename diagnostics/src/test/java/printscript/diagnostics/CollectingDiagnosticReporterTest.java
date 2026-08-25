@@ -1,10 +1,10 @@
 package printscript.diagnostics;
 
+import static org.junit.jupiter.api.Assertions.*;
+
+import org.junit.jupiter.api.Test;
 import printscript.common.token.Position;
 import printscript.common.token.Span;
-import org.junit.jupiter.api.Test;
-
-import static org.junit.jupiter.api.Assertions.*;
 
 class CollectingDiagnosticReporterTest {
 

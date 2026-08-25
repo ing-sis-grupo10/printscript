@@ -2,7 +2,6 @@ package printscript.diagnostics;
 
 import printscript.common.token.Span;
 
-
 public record Diagnostic(Severity severity, String message, Span span) {
 
     public static Diagnostic error(String message, Span span) {

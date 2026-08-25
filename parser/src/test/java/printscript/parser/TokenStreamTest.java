@@ -1,13 +1,11 @@
 package printscript.parser;
 
-import printscript.common.token.Token;
-import printscript.common.token.TokenType;
-import org.junit.jupiter.api.Test;
-import printscript.parser.TokenStream;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.util.List;
-
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import org.junit.jupiter.api.Test;
+import printscript.common.token.Token;
+import printscript.common.token.TokenType;
 
 class TokenStreamTest {
 
