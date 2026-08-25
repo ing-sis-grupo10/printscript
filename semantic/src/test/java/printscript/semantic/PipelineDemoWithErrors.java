@@ -1,14 +1,16 @@
 package printscript.semantic;
 
-import edu.austral.printscript.lexer.PrintScriptLexer;
-import parser.AssignmentParser;
-import parser.PrecedenceClimbingExpressionParser;
-import parser.PrintScriptParser;
-import parser.PrintlnStatementParser;
-import parser.VariableDeclarationParser;
+import printscript.lexer.PrintScriptLexer;
+import printscript.parser.AssignmentParser;
+import printscript.parser.PrecedenceClimbingExpressionParser;
+import printscript.parser.PrintScriptParser;
+import printscript.parser.PrintlnStatementParser;
+import printscript.parser.VariableDeclarationParser;
 import printscript.ast.Statement;
 import printscript.diagnostics.CollectingDiagnosticReporter;
 import printscript.diagnostics.Diagnostic;
+import printscript.semantic.GlobalSymbolTable;
+import printscript.semantic.PrintScriptSemanticAnalyzer;
 
 import java.io.StringReader;
 import java.util.List;

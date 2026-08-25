@@ -1,8 +1,8 @@
 package printscript.ast;
 
 import org.junit.jupiter.api.Test;
-import edu.austral.printscript.common.token.Position;
-import edu.austral.printscript.common.token.Span;
+import printscript.common.token.Position;
+import printscript.common.token.Span;
 
 import java.math.BigDecimal;
 import java.util.Optional;
@@ -54,5 +54,40 @@ class AstTest {
         Expression number = new NumberLiteral(BigDecimal.TEN, span);
 
         assertEquals("number:10", describe(number));
+    }
+    @Test
+    void identifierHoldsItsName() {
+        var identifier = new Identifier("x", span);
+
+        assertEquals("x", identifier.name());
+    }
+
+    @Test
+    void stringLiteralHoldsItsValue() {
+        var literal = new StringLiteral("hola", span);
+
+        assertEquals("hola", literal.value());
+    }
+
+    @Test
+    void assignmentHoldsNameAndValue() {
+        var value = new NumberLiteral(BigDecimal.ONE, span);
+        var assignment = new Assignment("x", value, span);
+
+        assertEquals("x", assignment.name());
+        assertEquals(value, assignment.value());
+    }
+
+    @Test
+    void printlnStatementHoldsItsArgument() {
+        var argument = new Identifier("x", span);
+        var println = new PrintlnStatement(argument, span);
+
+        assertEquals(argument, println.argument());
+    }
+    @Test
+    void switchOverExpressionCoversStringAndIdentifier() {
+        assertEquals("string:hola", describe(new StringLiteral("hola", span)));
+        assertEquals("identifier:x", describe(new Identifier("x", span)));
     }
 }

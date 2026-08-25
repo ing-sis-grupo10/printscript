@@ -1,10 +1,13 @@
 package printscript.semantic;
 
-import edu.austral.printscript.common.token.Position;
-import edu.austral.printscript.common.token.Span;
+import printscript.common.token.Position;
+import printscript.common.token.Span;
 import org.junit.jupiter.api.Test;
 import printscript.ast.*;
 import printscript.diagnostics.CollectingDiagnosticReporter;
+import printscript.semantic.GlobalSymbolTable;
+import printscript.semantic.PrintScriptSemanticAnalyzer;
+import printscript.semantic.SemanticAnalyzer;
 
 import java.math.BigDecimal;
 import java.util.List;

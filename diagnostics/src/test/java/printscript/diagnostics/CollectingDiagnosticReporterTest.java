@@ -1,7 +1,7 @@
 package printscript.diagnostics;
 
-import edu.austral.printscript.common.token.Position;
-import edu.austral.printscript.common.token.Span;
+import printscript.common.token.Position;
+import printscript.common.token.Span;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;

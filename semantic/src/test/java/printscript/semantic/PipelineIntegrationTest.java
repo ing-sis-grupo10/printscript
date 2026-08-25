@@ -1,13 +1,16 @@
 package printscript.semantic;
 
-import edu.austral.printscript.lexer.PrintScriptLexer;
+import printscript.lexer.PrintScriptLexer;
 import org.junit.jupiter.api.Test;
-import parser.AssignmentParser;
-import parser.PrecedenceClimbingExpressionParser;
-import parser.PrintScriptParser;
-import parser.PrintlnStatementParser;
-import parser.VariableDeclarationParser;
+import printscript.parser.AssignmentParser;
+import printscript.parser.PrecedenceClimbingExpressionParser;
+import printscript.parser.PrintScriptParser;
+import printscript.parser.PrintlnStatementParser;
+import printscript.parser.VariableDeclarationParser;
 import printscript.diagnostics.CollectingDiagnosticReporter;
+import printscript.semantic.GlobalSymbolTable;
+import printscript.semantic.PrintScriptSemanticAnalyzer;
+import printscript.semantic.SemanticAnalyzer;
 
 import java.io.StringReader;
 import java.util.List;
