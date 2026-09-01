@@ -21,7 +21,7 @@ public class AnalyzerPipelineDemoWithWarnings {
     public static void main(String[] args) {
         // dos violaciones de convención (no bloquean nada) + un error semántico real (sí bloquea)
         String source =
-            """
+                """
         let My_Name: string = "Joe";
         println(1 + 2);
         println(undeclaredVar);
@@ -32,13 +32,13 @@ public class AnalyzerPipelineDemoWithWarnings {
 
         var lexer = new PrintScriptLexer(new StringReader(source));
         var parser =
-            new PrintScriptParser(
-                lexer,
-                List.of(
-                    new VariableDeclarationParser(),
-                    new AssignmentParser(),
-                    new PrintlnStatementParser()),
-                new PrecedenceClimbingExpressionParser());
+                new PrintScriptParser(
+                        lexer,
+                        List.of(
+                                new VariableDeclarationParser(),
+                                new AssignmentParser(),
+                                new PrintlnStatementParser()),
+                        new PrecedenceClimbingExpressionParser());
         var semantic = new PrintScriptSemanticAnalyzer(parser, new GlobalSymbolTable());
         var analyzer = new PrintScriptAnalyzer(semantic, AnalyzerRules.defaults());
 
@@ -48,12 +48,17 @@ public class AnalyzerPipelineDemoWithWarnings {
             Result<Statement> result = analyzer.next();
             System.out.println("--- Statement " + i + " ---");
             switch (result) {
-                case Success<Statement> s -> System.out.println("OK (sigue siendo válido): " + s.value());
+                case Success<Statement> s ->
+                        System.out.println("OK (sigue siendo válido): " + s.value());
                 case Failure<Statement> f -> {
                     for (Diagnostic diagnostic : f.diagnostics()) {
                         System.out.println(
-                            "  [" + diagnostic.severity() + "] " + diagnostic.message()
-                                + " en " + diagnostic.span());
+                                "  ["
+                                        + diagnostic.severity()
+                                        + "] "
+                                        + diagnostic.message()
+                                        + " en "
+                                        + diagnostic.span());
                     }
                 }
             }
@@ -64,8 +69,12 @@ public class AnalyzerPipelineDemoWithWarnings {
         System.out.println("=== Warnings de convención acumulados por el analyzer ===");
         for (Diagnostic diagnostic : analyzer.diagnostics()) {
             System.out.println(
-                "  [" + diagnostic.severity() + "] " + diagnostic.message()
-                    + " en " + diagnostic.span());
+                    "  ["
+                            + diagnostic.severity()
+                            + "] "
+                            + diagnostic.message()
+                            + " en "
+                            + diagnostic.span());
         }
     }
 }

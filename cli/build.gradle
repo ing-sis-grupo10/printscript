@@ -1,3 +1,18 @@
 plugins {
-    id 'printscript.java-library-conventions'
+    id 'printscript.java-application-conventions'
+}
+
+dependencies {
+    implementation project(':common')
+    implementation project(':ast')
+    implementation project(':lexer')
+    implementation project(':parser')
+    implementation project(':semantic')
+    implementation project(':interpreter')
+    implementation project(':formatter')
+    implementation project(':analyzer')
+}
+
+application {
+    mainClass = 'printscript.cli.Main'
 }

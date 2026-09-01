@@ -20,7 +20,7 @@ public class AnalyzerPipelineDemo {
 
     public static void main(String[] args) {
         String source =
-            """
+                """
         let myName: string = "Joe";
         println(myName);
         """;
@@ -30,13 +30,13 @@ public class AnalyzerPipelineDemo {
 
         var lexer = new PrintScriptLexer(new StringReader(source));
         var parser =
-            new PrintScriptParser(
-                lexer,
-                List.of(
-                    new VariableDeclarationParser(),
-                    new AssignmentParser(),
-                    new PrintlnStatementParser()),
-                new PrecedenceClimbingExpressionParser());
+                new PrintScriptParser(
+                        lexer,
+                        List.of(
+                                new VariableDeclarationParser(),
+                                new AssignmentParser(),
+                                new PrintlnStatementParser()),
+                        new PrecedenceClimbingExpressionParser());
         var semantic = new PrintScriptSemanticAnalyzer(parser, new GlobalSymbolTable());
         var analyzer = new PrintScriptAnalyzer(semantic, AnalyzerRules.defaults());
 
@@ -50,8 +50,12 @@ public class AnalyzerPipelineDemo {
                 case Failure<Statement> f -> {
                     for (Diagnostic diagnostic : f.diagnostics()) {
                         System.out.println(
-                            "  [" + diagnostic.severity() + "] " + diagnostic.message()
-                                + " en " + diagnostic.span());
+                                "  ["
+                                        + diagnostic.severity()
+                                        + "] "
+                                        + diagnostic.message()
+                                        + " en "
+                                        + diagnostic.span());
                     }
                 }
             }
@@ -65,8 +69,12 @@ public class AnalyzerPipelineDemo {
         } else {
             for (Diagnostic diagnostic : analyzer.diagnostics()) {
                 System.out.println(
-                    "  [" + diagnostic.severity() + "] " + diagnostic.message()
-                        + " en " + diagnostic.span());
+                        "  ["
+                                + diagnostic.severity()
+                                + "] "
+                                + diagnostic.message()
+                                + " en "
+                                + diagnostic.span());
             }
         }
     }

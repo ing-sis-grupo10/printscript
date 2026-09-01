@@ -25,13 +25,13 @@ class PipelineIntegrationTest {
     private PrintScriptAnalyzer pipelineFor(String source, AnalyzerRules rules) {
         var lexer = new PrintScriptLexer(new StringReader(source));
         var parser =
-            new PrintScriptParser(
-                lexer,
-                List.of(
-                    new VariableDeclarationParser(),
-                    new AssignmentParser(),
-                    new PrintlnStatementParser()),
-                new PrecedenceClimbingExpressionParser());
+                new PrintScriptParser(
+                        lexer,
+                        List.of(
+                                new VariableDeclarationParser(),
+                                new AssignmentParser(),
+                                new PrintlnStatementParser()),
+                        new PrecedenceClimbingExpressionParser());
         var semantic = new PrintScriptSemanticAnalyzer(parser, new GlobalSymbolTable());
         return new PrintScriptAnalyzer(semantic, rules);
     }
@@ -46,7 +46,7 @@ class PipelineIntegrationTest {
     @Test
     void wellNamedProgramProducesNoWarnings() {
         String source =
-            """
+                """
         let myName: string = "Joe";
         println(myName);
         """;

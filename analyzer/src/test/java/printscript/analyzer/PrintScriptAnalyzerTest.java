@@ -30,13 +30,14 @@ class PrintScriptAnalyzerTest {
 
     private PrintScriptAnalyzer analyzerFor(List<Statement> statements, AnalyzerRules rules) {
         List<Result<Statement>> wrapped =
-            statements.stream().map(Result::<Statement>success).toList();
+                statements.stream().map(Result::<Statement>success).toList();
         return new PrintScriptAnalyzer(wrapped.iterator(), rules);
     }
 
     @Test
     void acceptsCamelCaseIdentifierByDefault() {
-        var declaration = new VariableDeclaration("miVariable", DeclaredType.NUMBER, Optional.empty(), span);
+        var declaration =
+                new VariableDeclaration("miVariable", DeclaredType.NUMBER, Optional.empty(), span);
 
         var analyzer = analyzerFor(List.of(declaration), AnalyzerRules.defaults());
         var result = analyzer.next();
@@ -48,7 +49,8 @@ class PrintScriptAnalyzerTest {
 
     @Test
     void reportsSnakeCaseIdentifierWhenCamelCaseIsExpected() {
-        var declaration = new VariableDeclaration("mi_variable", DeclaredType.NUMBER, Optional.empty(), span);
+        var declaration =
+                new VariableDeclaration("mi_variable", DeclaredType.NUMBER, Optional.empty(), span);
 
         var analyzer = analyzerFor(List.of(declaration), AnalyzerRules.defaults());
         var result = analyzer.next();
@@ -60,7 +62,8 @@ class PrintScriptAnalyzerTest {
     @Test
     void acceptsSnakeCaseIdentifierWhenConfigured() {
         var rules = new AnalyzerRules(AnalyzerRules.IdentifierCase.SNAKE_CASE, true);
-        var declaration = new VariableDeclaration("mi_variable", DeclaredType.NUMBER, Optional.empty(), span);
+        var declaration =
+                new VariableDeclaration("mi_variable", DeclaredType.NUMBER, Optional.empty(), span);
 
         var analyzer = analyzerFor(List.of(declaration), rules);
         analyzer.next();
@@ -80,9 +83,12 @@ class PrintScriptAnalyzerTest {
 
     @Test
     void reportsPrintlnWithExpressionArgument() {
-        var expression = new BinaryExpression(
-            new NumberLiteral(BigDecimal.ONE, span), BinaryOperator.PLUS,
-            new NumberLiteral(BigDecimal.TWO, span), span);
+        var expression =
+                new BinaryExpression(
+                        new NumberLiteral(BigDecimal.ONE, span),
+                        BinaryOperator.PLUS,
+                        new NumberLiteral(BigDecimal.TWO, span),
+                        span);
         var println = new PrintlnStatement(expression, span);
 
         var analyzer = analyzerFor(List.of(println), AnalyzerRules.defaults());
@@ -95,9 +101,12 @@ class PrintScriptAnalyzerTest {
     @Test
     void skipsPrintlnRuleWhenDisabled() {
         var rules = new AnalyzerRules(AnalyzerRules.IdentifierCase.CAMEL_CASE, false);
-        var expression = new BinaryExpression(
-            new NumberLiteral(BigDecimal.ONE, span), BinaryOperator.PLUS,
-            new NumberLiteral(BigDecimal.TWO, span), span);
+        var expression =
+                new BinaryExpression(
+                        new NumberLiteral(BigDecimal.ONE, span),
+                        BinaryOperator.PLUS,
+                        new NumberLiteral(BigDecimal.TWO, span),
+                        span);
         var println = new PrintlnStatement(expression, span);
 
         var analyzer = analyzerFor(List.of(println), rules);
@@ -108,7 +117,8 @@ class PrintScriptAnalyzerTest {
 
     @Test
     void doesNotCheckAssignments() {
-        var assignment = new Assignment("Mal_Nombrado", new NumberLiteral(BigDecimal.ONE, span), span);
+        var assignment =
+                new Assignment("Mal_Nombrado", new NumberLiteral(BigDecimal.ONE, span), span);
 
         var analyzer = analyzerFor(List.of(assignment), AnalyzerRules.defaults());
         analyzer.next();
@@ -119,9 +129,11 @@ class PrintScriptAnalyzerTest {
     @Test
     void passesThroughUpstreamFailureWithoutAnalyzing() {
         Result<Statement> upstreamFailure =
-            Result.failure(Diagnostic.error("error de sintaxis previo", span));
+                Result.failure(Diagnostic.error("error de sintaxis previo", span));
 
-        var analyzer = new PrintScriptAnalyzer(List.of(upstreamFailure).iterator(), AnalyzerRules.defaults());
+        var analyzer =
+                new PrintScriptAnalyzer(
+                        List.of(upstreamFailure).iterator(), AnalyzerRules.defaults());
         var result = analyzer.next();
 
         assertSame(upstreamFailure, result);
