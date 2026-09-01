@@ -1,11 +1,16 @@
 package printscript.interpreter.runtime;
 
 import java.util.Optional;
+import printscript.ast.DeclaredType;
+import printscript.common.result.Diagnostic;
+import printscript.common.token.Span;
 
 public interface Environment {
-    void define(String name, RuntimeValue value);
+    Optional<Diagnostic> declare(String name, DeclaredType type, Span declarationSite);
 
     void assign(String name, RuntimeValue value);
 
-    Optional<RuntimeValue> lookup(String name);
+    Optional<DeclaredType> typeOf(String name);
+
+    Optional<RuntimeValue> valueOf(String name);
 }

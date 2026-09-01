@@ -26,8 +26,6 @@ import printscript.parser.PrecedenceClimbingExpressionParser;
 import printscript.parser.PrintScriptParser;
 import printscript.parser.PrintlnStatementParser;
 import printscript.parser.VariableDeclarationParser;
-import printscript.semantic.GlobalSymbolTable;
-import printscript.semantic.PrintScriptSemanticAnalyzer;
 
 class PipelineIntegrationTest {
 
@@ -43,7 +41,6 @@ class PipelineIntegrationTest {
                                 new AssignmentParser(),
                                 new PrintlnStatementParser()),
                         new PrecedenceClimbingExpressionParser());
-        var semanticAnalyzer = new PrintScriptSemanticAnalyzer(parser, new GlobalSymbolTable());
 
         var output = new ByteArrayOutputStream();
         var evaluator = new ExpressionEvaluator();
@@ -53,8 +50,7 @@ class PipelineIntegrationTest {
                                 new VariableDeclarationHandler(evaluator),
                                 new AssignmentHandler(evaluator),
                                 new PrintlnStatementHandler(evaluator, new PrintStream(output))));
-        var interpreter =
-                new PrintScriptInterpreter(semanticAnalyzer, new GlobalEnvironment(), registry);
+        var interpreter = new PrintScriptInterpreter(parser, new GlobalEnvironment(), registry);
 
         boolean hadFailure = false;
         while (interpreter.hasNext()) {
@@ -118,11 +114,6 @@ class PipelineIntegrationTest {
 
     @Test
     void divisionByZeroStopsExecutionBeforePrinting() {
-        // fix 8: la división por cero es un error de runtime que semantic NO detecta
-        // (a y b son ambas number, tipos correctos). Antes el evaluator devolvía
-        // ZERO en silencio y el println imprimía "0". Ahora falla, "c" nunca se
-        // define en el environment, y el println que la usa también falla —
-        // no se imprime nada.
         String source =
                 """
             let a: number = 10;
@@ -135,5 +126,85 @@ class PipelineIntegrationTest {
 
         assertTrue(result.hadFailure());
         assertEquals("", result.output());
+    }
+
+    @Test
+    void reportsTypeMismatchOnDeclaration() {
+        String source = "let x: number = \"esto no es un numero\";";
+
+        RunResult result = run(source);
+
+        assertTrue(result.hadFailure());
+    }
+
+    @Test
+    void reportsUndeclaredVariableInAssignment() {
+        String source = "x = 5;";
+
+        RunResult result = run(source);
+
+        assertTrue(result.hadFailure());
+    }
+
+    @Test
+    void reportsRedeclaration() {
+        String source =
+                """
+            let x: number = 1;
+            let x: string = "hola";
+            """;
+
+        RunResult result = run(source);
+
+        assertTrue(result.hadFailure());
+    }
+
+    @Test
+    void reportsArithmeticWithStringOperand() {
+        String source = "println(\"hola\" - 1);";
+
+        RunResult result = run(source);
+
+        assertTrue(result.hadFailure());
+    }
+
+    @Test
+    void reportsUninitializedVariableUsedBeforeAssignment() {
+        String source = """
+            let x: number;
+            println(x);
+            """;
+
+        RunResult result = run(source);
+
+        assertTrue(result.hadFailure());
+        assertEquals("", result.output());
+    }
+
+    @Test
+    void declaresWithoutInitializerThenAssignsWorksFine() {
+        String source =
+                """
+            let x: number;
+            x = 5;
+            println(x);
+            """;
+
+        RunResult result = run(source);
+
+        assertEquals("5", result.output());
+        assertFalse(result.hadFailure());
+    }
+
+    @Test
+    void syntaxErrorRecoversAndContinuesToNextStatement() {
+        String source = """
+            let x number = 5;
+            println(x);
+            """;
+
+        RunResult result = run(source);
+
+        assertTrue(result.hadFailure());
     }
 }

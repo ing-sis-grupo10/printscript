@@ -3,7 +3,9 @@ package printscript.interpreter.runtime;
 import java.math.BigDecimal;
 import java.math.MathContext;
 import java.util.Optional;
+import java.util.function.BinaryOperator;
 import printscript.ast.BinaryExpression;
+import printscript.ast.DeclaredType;
 import printscript.ast.Expression;
 import printscript.ast.Identifier;
 import printscript.ast.NumberLiteral;
@@ -11,6 +13,7 @@ import printscript.ast.StringLiteral;
 import printscript.common.result.Diagnostic;
 import printscript.common.result.Failure;
 import printscript.common.result.Result;
+import printscript.common.result.Success;
 import printscript.interpreter.runtime.RuntimeValue.NumberValue;
 import printscript.interpreter.runtime.RuntimeValue.StringValue;
 
@@ -26,9 +29,13 @@ public final class ExpressionEvaluator {
     }
 
     private Result<RuntimeValue> lookupIdentifier(Identifier id, Environment environment) {
-        Optional<RuntimeValue> value = environment.lookup(id.name());
+        Optional<RuntimeValue> value = environment.valueOf(id.name());
         if (value.isPresent()) {
             return Result.success(value.get());
+        }
+        if (environment.typeOf(id.name()).isPresent()) {
+            return Result.failure(
+                    Diagnostic.error("Variable usada sin inicializar: " + id.name(), id.span()));
         }
         return Result.failure(Diagnostic.error("Variable no declarada: " + id.name(), id.span()));
     }
@@ -44,15 +51,14 @@ public final class ExpressionEvaluator {
             return rf;
         }
 
-        RuntimeValue left = ((printscript.common.result.Success<RuntimeValue>) leftResult).value();
-        RuntimeValue right =
-                ((printscript.common.result.Success<RuntimeValue>) rightResult).value();
+        RuntimeValue left = ((Success<RuntimeValue>) leftResult).value();
+        RuntimeValue right = ((Success<RuntimeValue>) rightResult).value();
 
         return switch (expression.operator()) {
             case PLUS -> Result.success(evaluatePlus(left, right));
-            case MINUS -> Result.success(new NumberValue(numberOf(left).subtract(numberOf(right))));
-            case TIMES -> Result.success(new NumberValue(numberOf(left).multiply(numberOf(right))));
-            case DIVIDE -> evaluateDivide(numberOf(left), numberOf(right), expression);
+            case MINUS -> applyArithmetic(left, right, expression, BigDecimal::subtract);
+            case TIMES -> applyArithmetic(left, right, expression, BigDecimal::multiply);
+            case DIVIDE -> evaluateDivide(left, right, expression);
         };
     }
 
@@ -63,16 +69,43 @@ public final class ExpressionEvaluator {
         return new NumberValue(numberOf(left).add(numberOf(right)));
     }
 
+    private Result<RuntimeValue> applyArithmetic(
+            RuntimeValue left,
+            RuntimeValue right,
+            BinaryExpression expression,
+            BinaryOperator<BigDecimal> operation) {
+        if (!(left instanceof NumberValue l) || !(right instanceof NumberValue r)) {
+            return Result.failure(
+                    Diagnostic.error(
+                            "Los operandos de " + expression.operator() + " deben ser number",
+                            expression.span()));
+        }
+        return Result.success(new NumberValue(operation.apply(l.value(), r.value())));
+    }
+
     private Result<RuntimeValue> evaluateDivide(
-            BigDecimal left, BigDecimal right, BinaryExpression expression) {
-        if (right.compareTo(BigDecimal.ZERO) == 0) {
+            RuntimeValue left, RuntimeValue right, BinaryExpression expression) {
+        if (!(left instanceof NumberValue l) || !(right instanceof NumberValue r)) {
+            return Result.failure(
+                    Diagnostic.error(
+                            "Los operandos de " + expression.operator() + " deben ser number",
+                            expression.span()));
+        }
+        if (r.value().compareTo(BigDecimal.ZERO) == 0) {
             return Result.failure(Diagnostic.error("División por cero", expression.span()));
         }
-        return Result.success(new NumberValue(left.divide(right, MathContext.DECIMAL64)));
+        return Result.success(new NumberValue(l.value().divide(r.value(), MathContext.DECIMAL64)));
     }
 
     private BigDecimal numberOf(RuntimeValue value) {
         return ((NumberValue) value).value();
+    }
+
+    public DeclaredType typeOf(RuntimeValue value) {
+        return switch (value) {
+            case NumberValue n -> DeclaredType.NUMBER;
+            case StringValue s -> DeclaredType.STRING;
+        };
     }
 
     public String display(RuntimeValue value) {
