@@ -1,5 +1,7 @@
 package printscript.analyzer;
 
+import java.io.OutputStream;
+import java.io.PrintStream;
 import java.io.StringReader;
 import java.util.List;
 import printscript.ast.Statement;
@@ -7,14 +9,19 @@ import printscript.common.result.Diagnostic;
 import printscript.common.result.Failure;
 import printscript.common.result.Result;
 import printscript.common.result.Success;
+import printscript.interpreter.PrintScriptInterpreter;
+import printscript.interpreter.handler.AssignmentHandler;
+import printscript.interpreter.handler.HandlerRegistry;
+import printscript.interpreter.handler.PrintlnStatementHandler;
+import printscript.interpreter.handler.VariableDeclarationHandler;
+import printscript.interpreter.runtime.ExpressionEvaluator;
+import printscript.interpreter.runtime.GlobalEnvironment;
 import printscript.lexer.PrintScriptLexer;
 import printscript.parser.AssignmentParser;
 import printscript.parser.PrecedenceClimbingExpressionParser;
 import printscript.parser.PrintScriptParser;
 import printscript.parser.PrintlnStatementParser;
 import printscript.parser.VariableDeclarationParser;
-import printscript.semantic.GlobalSymbolTable;
-import printscript.semantic.PrintScriptSemanticAnalyzer;
 
 public class AnalyzerPipelineDemoWithWarnings {
 
@@ -39,8 +46,17 @@ public class AnalyzerPipelineDemoWithWarnings {
                                 new AssignmentParser(),
                                 new PrintlnStatementParser()),
                         new PrecedenceClimbingExpressionParser());
-        var semantic = new PrintScriptSemanticAnalyzer(parser, new GlobalSymbolTable());
-        var analyzer = new PrintScriptAnalyzer(semantic, AnalyzerRules.defaults());
+        var evaluator = new ExpressionEvaluator();
+        var handlers =
+                new HandlerRegistry(
+                        List.of(
+                                new VariableDeclarationHandler(evaluator),
+                                new AssignmentHandler(evaluator),
+                                new PrintlnStatementHandler(
+                                        evaluator,
+                                        new PrintStream(OutputStream.nullOutputStream()))));
+        var interpreter = new PrintScriptInterpreter(parser, new GlobalEnvironment(), handlers);
+        var analyzer = new PrintScriptAnalyzer(interpreter, AnalyzerRules.defaults());
 
         System.out.println("=== Procesando statement por statement ===");
         int i = 1;

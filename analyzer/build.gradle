@@ -9,5 +9,5 @@ dependencies {
 
     testImplementation project(':lexer')
     testImplementation project(':parser')
-    testImplementation project(':semantic')
+    testImplementation project(':interpreter')
 }
