@@ -1,7 +1,10 @@
 package printscript.interpreter.handler;
 
+import java.util.Optional;
 import printscript.ast.Assignment;
+import printscript.ast.DeclaredType;
 import printscript.ast.Statement;
+import printscript.common.result.Diagnostic;
 import printscript.common.result.Failure;
 import printscript.common.result.Result;
 import printscript.common.result.Success;
@@ -24,13 +27,33 @@ public final class AssignmentHandler implements StatementHandler {
     @Override
     public Result<Statement> handle(Statement statement, Environment environment) {
         Assignment assignment = (Assignment) statement;
+        Optional<DeclaredType> declaredType = environment.typeOf(assignment.name());
+        if (declaredType.isEmpty()) {
+            return Result.failure(
+                    Diagnostic.error(
+                            "Variable no declarada: " + assignment.name(), assignment.span()));
+        }
+
         Result<RuntimeValue> value = evaluator.evaluate(assignment.value(), environment);
-        return switch (value) {
-            case Failure<RuntimeValue> f -> Result.failure(f.diagnostics());
-            case Success<RuntimeValue> s -> {
-                environment.assign(assignment.name(), s.value());
-                yield Result.success(statement);
-            }
-        };
+        if (value instanceof Failure<RuntimeValue> f) {
+            return Result.failure(f.diagnostics());
+        }
+        RuntimeValue runtimeValue = ((Success<RuntimeValue>) value).value();
+
+        if (evaluator.typeOf(runtimeValue) != declaredType.get()) {
+            return Result.failure(
+                    Diagnostic.error(
+                            "No se puede asignar "
+                                    + evaluator.typeOf(runtimeValue)
+                                    + " a "
+                                    + assignment.name()
+                                    + " (declarada como "
+                                    + declaredType.get()
+                                    + ")",
+                            assignment.value().span()));
+        }
+
+        environment.assign(assignment.name(), runtimeValue);
+        return Result.success(statement);
     }
 }
