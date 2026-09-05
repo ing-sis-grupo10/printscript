@@ -1,5 +1,13 @@
 package printscript.cli;
 
+import java.io.FileReader;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
+import java.io.PrintStream;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
 import printscript.analyzer.AnalyzerRules;
 import printscript.analyzer.AnalyzerRulesLoader;
 import printscript.analyzer.PrintScriptAnalyzer;
@@ -26,15 +34,6 @@ import printscript.parser.PrintScriptParser;
 import printscript.parser.PrintlnStatementParser;
 import printscript.parser.VariableDeclarationParser;
 
-import java.io.FileReader;
-import java.io.IOException;
-import java.io.OutputStream;
-import java.io.OutputStreamWriter;
-import java.io.PrintStream;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
-
 final class Pipeline {
     private final String sourceFile;
     private final String configFile;
@@ -53,19 +52,23 @@ final class Pipeline {
     }
 
     int format() throws IOException {
-        FormattingRules rules = configFile != null
-            ? new FormattingRulesLoader().load(new FileReader(configFile))
-            : FormattingRules.defaults();
+        FormattingRules rules =
+                configFile != null
+                        ? new FormattingRulesLoader().load(new FileReader(configFile))
+                        : FormattingRules.defaults();
         try (var source = new FileReader(sourceFile)) {
-            new PrintScriptFormatter(rules).format(source, new OutputStreamWriter(System.out));
+            var writer = new OutputStreamWriter(System.out);
+            new PrintScriptFormatter(rules).format(source, writer);
+            writer.flush();
         }
         return 0;
     }
 
     int analyze() throws IOException {
-        AnalyzerRules rules = configFile != null
-            ? new AnalyzerRulesLoader().load(new FileReader(configFile))
-            : AnalyzerRules.defaults();
+        AnalyzerRules rules =
+                configFile != null
+                        ? new AnalyzerRulesLoader().load(new FileReader(configFile))
+                        : AnalyzerRules.defaults();
         var analyzer = new PrintScriptAnalyzer(buildInterpreter(silentOutput()), rules);
         List<Diagnostic> diagnostics = new ArrayList<>(drain(analyzer));
         diagnostics.addAll(analyzer.diagnostics());
@@ -74,17 +77,22 @@ final class Pipeline {
 
     private PrintScriptInterpreter buildInterpreter(PrintStream out) throws IOException {
         var lexer = new PrintScriptLexer(new FileReader(sourceFile));
-        var parser = new PrintScriptParser(
-            lexer,
-            List.of(new VariableDeclarationParser(), new AssignmentParser(), new PrintlnStatementParser()),
-            new PrecedenceClimbingExpressionParser());
+        var parser =
+                new PrintScriptParser(
+                        lexer,
+                        List.of(
+                                new VariableDeclarationParser(),
+                                new AssignmentParser(),
+                                new PrintlnStatementParser()),
+                        new PrecedenceClimbingExpressionParser());
 
         var evaluator = new ExpressionEvaluator();
-        var handlers = new HandlerRegistry(List.of(
-            new VariableDeclarationHandler(evaluator),
-            new AssignmentHandler(evaluator),
-            new PrintlnStatementHandler(evaluator, out)
-        ));
+        var handlers =
+                new HandlerRegistry(
+                        List.of(
+                                new VariableDeclarationHandler(evaluator),
+                                new AssignmentHandler(evaluator),
+                                new PrintlnStatementHandler(evaluator, out)));
         Environment environment = new GlobalEnvironment();
         return new PrintScriptInterpreter(parser, environment, handlers);
     }
@@ -109,9 +117,20 @@ final class Pipeline {
 
     private int report(List<Diagnostic> diagnostics) {
         for (Diagnostic d : diagnostics) {
-            System.err.println("[" + d.severity() + "] " + d.message()
-                + " (" + d.span().start().line() + ":" + d.span().start().column()
-                + " - " + d.span().end().line() + ":" + d.span().end().column() + ")");
+            System.err.println(
+                    "["
+                            + d.severity()
+                            + "] "
+                            + d.message()
+                            + " ("
+                            + d.span().start().line()
+                            + ":"
+                            + d.span().start().column()
+                            + " - "
+                            + d.span().end().line()
+                            + ":"
+                            + d.span().end().column()
+                            + ")");
         }
         boolean hasErrors = diagnostics.stream().anyMatch(d -> d.severity() == Severity.ERROR);
         return hasErrors ? 1 : 0;
