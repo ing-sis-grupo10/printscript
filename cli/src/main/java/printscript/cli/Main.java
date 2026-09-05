@@ -18,11 +18,12 @@ public final class Main {
 
         for (int i = 2; i < args.length; i++) {
             switch (args[i]) {
-                case "--config" -> configFile = args[++i];
-                case "--version" -> version = args[++i];
+                case "--config" -> configFile = requireValue(args, i++);
+                case "--version" -> version = requireValue(args, i++);
                 default -> {
                     System.err.println("Argumento desconocido: " + args[i]);
                     System.exit(2);
+                    return;
                 }
             }
         }
@@ -52,5 +53,13 @@ public final class Main {
         }
 
         System.exit(exitCode);
+    }
+
+    private static String requireValue(String[] args, int flagIndex) {
+        if (flagIndex + 1 >= args.length) {
+            System.err.println(args[flagIndex] + " necesita un valor");
+            System.exit(2);
+        }
+        return args[flagIndex + 1];
     }
 }
