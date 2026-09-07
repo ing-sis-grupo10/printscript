@@ -37,6 +37,20 @@ public class AnalyzerPipelineDemoWithWarnings {
         System.out.println("=== Código fuente ===");
         System.out.println(source);
 
+        var analyzer = buildAnalyzer(source);
+
+        System.out.println("=== Procesando statement por statement ===");
+        int i = 1;
+        while (analyzer.hasNext()) {
+            printResult(i, analyzer.next());
+            i++;
+        }
+
+        System.out.println("=== Warnings de convención acumulados por el analyzer ===");
+        analyzer.diagnostics().forEach(AnalyzerPipelineDemoWithWarnings::printDiagnostic);
+    }
+
+    private static PrintScriptAnalyzer buildAnalyzer(String source) {
         var lexer = new PrintScriptLexer(new StringReader(source));
         var parser =
                 new PrintScriptParser(
@@ -56,41 +70,27 @@ public class AnalyzerPipelineDemoWithWarnings {
                                         evaluator,
                                         new PrintStream(OutputStream.nullOutputStream()))));
         var interpreter = new PrintScriptInterpreter(parser, new GlobalEnvironment(), handlers);
-        var analyzer = new PrintScriptAnalyzer(interpreter, AnalyzerRules.defaults());
+        return new PrintScriptAnalyzer(interpreter, AnalyzerRules.defaults());
+    }
 
-        System.out.println("=== Procesando statement por statement ===");
-        int i = 1;
-        while (analyzer.hasNext()) {
-            Result<Statement> result = analyzer.next();
-            System.out.println("--- Statement " + i + " ---");
-            switch (result) {
-                case Success<Statement> s ->
-                        System.out.println("OK (sigue siendo válido): " + s.value());
-                case Failure<Statement> f -> {
-                    for (Diagnostic diagnostic : f.diagnostics()) {
-                        System.out.println(
-                                "  ["
-                                        + diagnostic.severity()
-                                        + "] "
-                                        + diagnostic.message()
-                                        + " en "
-                                        + diagnostic.span());
-                    }
-                }
-            }
-            System.out.println();
-            i++;
+    private static void printResult(int index, Result<Statement> result) {
+        System.out.println("--- Statement " + index + " ---");
+        switch (result) {
+            case Success<Statement> s ->
+                    System.out.println("OK (sigue siendo válido): " + s.value());
+            case Failure<Statement> f ->
+                    f.diagnostics().forEach(AnalyzerPipelineDemoWithWarnings::printDiagnostic);
         }
+        System.out.println();
+    }
 
-        System.out.println("=== Warnings de convención acumulados por el analyzer ===");
-        for (Diagnostic diagnostic : analyzer.diagnostics()) {
-            System.out.println(
-                    "  ["
-                            + diagnostic.severity()
-                            + "] "
-                            + diagnostic.message()
-                            + " en "
-                            + diagnostic.span());
-        }
+    private static void printDiagnostic(Diagnostic diagnostic) {
+        System.out.println(
+                "  ["
+                        + diagnostic.severity()
+                        + "] "
+                        + diagnostic.message()
+                        + " en "
+                        + diagnostic.span());
     }
 }
