@@ -50,10 +50,17 @@ public final class PrecedenceClimbingExpressionParser implements ExpressionParse
             case NUMBER_LITERAL -> new NumberLiteral(new BigDecimal(token.value()), token.span());
             case STRING_LITERAL -> new StringLiteral(token.value(), token.span());
             case IDENTIFIER -> new Identifier(token.value(), token.span());
+            case MINUS -> parseNegativeNumber(tokens, token);
             default ->
                     throw new ParseError(
                             "Se esperaba un número, string o identificador", token.span());
         };
+    }
+
+    private Expression parseNegativeNumber(TokenStream tokens, Token minusToken) {
+        Token number = tokens.expect(TokenType.NUMBER_LITERAL);
+        BigDecimal value = new BigDecimal(number.value()).negate();
+        return new NumberLiteral(value, Span.merge(minusToken.span(), number.span()));
     }
 
     private boolean isAdditive(TokenType type) {
