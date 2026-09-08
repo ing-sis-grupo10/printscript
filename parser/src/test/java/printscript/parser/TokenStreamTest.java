@@ -1,10 +1,14 @@
 package printscript.parser;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.util.List;
 import org.junit.jupiter.api.Test;
+import printscript.common.result.Diagnostic;
 import printscript.common.result.Result;
+import printscript.common.token.Position;
+import printscript.common.token.Span;
 import printscript.common.token.Token;
 import printscript.common.token.TokenType;
 
@@ -21,5 +25,17 @@ class TokenStreamTest {
         Token synthesized = stream.peek();
 
         assertEquals(TokenType.EOF, synthesized.type());
+    }
+
+    @Test
+    void translatesUpstreamLexerFailureIntoParseErrorOnConsume() {
+        Span errorSpan = Span.of(new Position(1, 0), new Position(1, 1));
+        List<Result<Token>> tokens =
+                List.of(
+                        Result.success(new Token(TokenType.SEMICOLON, ";", errorSpan)),
+                        Result.failure(Diagnostic.error("Carácter no reconocido", errorSpan)));
+        TokenStream stream = new TokenStream(tokens.iterator());
+
+        assertThrows(ParseError.class, stream::consume);
     }
 }
