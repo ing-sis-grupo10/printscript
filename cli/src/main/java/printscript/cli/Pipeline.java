@@ -5,6 +5,8 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.PrintStream;
+import java.io.Reader;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -44,20 +46,21 @@ final class Pipeline {
     }
 
     int validate() throws IOException {
-        return report(drain(buildInterpreter(silentOutput())));
+        try (var source = new FileReader(sourceFile, StandardCharsets.UTF_8)) {
+            return report(drain(buildInterpreter(source, silentOutput())));
+        }
     }
 
     int execute() throws IOException {
-        return report(drain(buildInterpreter(System.out)));
+        try (var source = new FileReader(sourceFile, StandardCharsets.UTF_8)) {
+            return report(drain(buildInterpreter(source, System.out)));
+        }
     }
 
     int format() throws IOException {
-        FormattingRules rules =
-                configFile != null
-                        ? new FormattingRulesLoader().load(new FileReader(configFile))
-                        : FormattingRules.defaults();
-        try (var source = new FileReader(sourceFile)) {
-            var writer = new OutputStreamWriter(System.out);
+        FormattingRules rules = loadFormattingRules();
+        try (var source = new FileReader(sourceFile, StandardCharsets.UTF_8)) {
+            var writer = new OutputStreamWriter(System.out, StandardCharsets.UTF_8);
             new PrintScriptFormatter(rules).format(source, writer);
             writer.flush();
         }
@@ -65,18 +68,35 @@ final class Pipeline {
     }
 
     int analyze() throws IOException {
-        AnalyzerRules rules =
-                configFile != null
-                        ? new AnalyzerRulesLoader().load(new FileReader(configFile))
-                        : AnalyzerRules.defaults();
-        var analyzer = new PrintScriptAnalyzer(buildInterpreter(silentOutput()), rules);
-        List<Diagnostic> diagnostics = new ArrayList<>(drain(analyzer));
-        diagnostics.addAll(analyzer.diagnostics());
-        return report(diagnostics);
+        AnalyzerRules rules = loadAnalyzerRules();
+        try (var source = new FileReader(sourceFile, StandardCharsets.UTF_8)) {
+            var analyzer = new PrintScriptAnalyzer(buildInterpreter(source, silentOutput()), rules);
+            List<Diagnostic> diagnostics = new ArrayList<>(drain(analyzer));
+            diagnostics.addAll(analyzer.diagnostics());
+            return report(diagnostics);
+        }
     }
 
-    private PrintScriptInterpreter buildInterpreter(PrintStream out) throws IOException {
-        var lexer = new PrintScriptLexer(new FileReader(sourceFile));
+    private FormattingRules loadFormattingRules() throws IOException {
+        if (configFile == null) {
+            return FormattingRules.defaults();
+        }
+        try (var configReader = new FileReader(configFile, StandardCharsets.UTF_8)) {
+            return new FormattingRulesLoader().load(configReader);
+        }
+    }
+
+    private AnalyzerRules loadAnalyzerRules() throws IOException {
+        if (configFile == null) {
+            return AnalyzerRules.defaults();
+        }
+        try (var configReader = new FileReader(configFile, StandardCharsets.UTF_8)) {
+            return new AnalyzerRulesLoader().load(configReader);
+        }
+    }
+
+    private PrintScriptInterpreter buildInterpreter(Reader source, PrintStream out) {
+        var lexer = new PrintScriptLexer(source);
         var parser =
                 new PrintScriptParser(
                         lexer,
@@ -98,7 +118,7 @@ final class Pipeline {
     }
 
     private PrintStream silentOutput() {
-        return new PrintStream(OutputStream.nullOutputStream());
+        return new PrintStream(OutputStream.nullOutputStream(), false, StandardCharsets.UTF_8);
     }
 
     private List<Diagnostic> drain(Iterator<Result<Statement>> statements) {
