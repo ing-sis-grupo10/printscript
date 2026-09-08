@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import java.util.List;
 import org.junit.jupiter.api.Test;
+import printscript.ast.Assignment;
 import printscript.ast.DeclaredType;
 import printscript.ast.PrintlnStatement;
 import printscript.ast.Statement;
@@ -88,6 +89,77 @@ class PrintScriptParserTest {
         assertInstanceOf(Success.class, second);
         assertInstanceOf(PrintlnStatement.class, ((Success<Statement>) second).value());
 
+        assertFalse(parser.hasNext());
+    }
+
+    @Test
+    void parsesAssignmentToExistingVariable() {
+        List<Result<Token>> tokens =
+                List.of(
+                        token(TokenType.IDENTIFIER, "x"),
+                        token(TokenType.ASSIGN, "="),
+                        token(TokenType.NUMBER_LITERAL, "5"),
+                        token(TokenType.SEMICOLON, ";"),
+                        token(TokenType.EOF, ""));
+
+        PrintScriptParser parser =
+                new PrintScriptParser(
+                        tokens.iterator(),
+                        List.of(
+                                new VariableDeclarationParser(),
+                                new AssignmentParser(),
+                                new PrintlnStatementParser()),
+                        new PrecedenceClimbingExpressionParser());
+
+        Result<Statement> result = parser.next();
+
+        assertInstanceOf(Success.class, result);
+        var assignment = (Assignment) ((Success<Statement>) result).value();
+        assertEquals("x", assignment.name());
+    }
+
+    @Test
+    void reportsUnknownDeclaredType() {
+        List<Result<Token>> tokens =
+                List.of(
+                        token(TokenType.LET, "let"),
+                        token(TokenType.IDENTIFIER, "x"),
+                        token(TokenType.COLON, ":"),
+                        token(TokenType.IDENTIFIER, "boolean"),
+                        token(TokenType.SEMICOLON, ";"),
+                        token(TokenType.EOF, ""));
+
+        PrintScriptParser parser =
+                new PrintScriptParser(
+                        tokens.iterator(),
+                        List.of(
+                                new VariableDeclarationParser(),
+                                new AssignmentParser(),
+                                new PrintlnStatementParser()),
+                        new PrecedenceClimbingExpressionParser());
+
+        Result<Statement> result = parser.next();
+
+        assertInstanceOf(Failure.class, result);
+    }
+
+    @Test
+    void reportsUnexpectedTokenAtStatementLevel() {
+        List<Result<Token>> tokens =
+                List.of(token(TokenType.SEMICOLON, ";"), token(TokenType.EOF, ""));
+
+        PrintScriptParser parser =
+                new PrintScriptParser(
+                        tokens.iterator(),
+                        List.of(
+                                new VariableDeclarationParser(),
+                                new AssignmentParser(),
+                                new PrintlnStatementParser()),
+                        new PrecedenceClimbingExpressionParser());
+
+        Result<Statement> result = parser.next();
+
+        assertInstanceOf(Failure.class, result);
         assertFalse(parser.hasNext());
     }
 }
