@@ -9,7 +9,7 @@
 
     <module name="NewlineAtEndOfFile"/>
     <module name="FileTabCharacter"/>
-    <module name="LineLength">
+    <module name="LineLength">  <!-- regla personalizada, el default es 80 -->
         <property name="max" value="140"/>
     </module>
 
@@ -29,5 +29,8 @@
             <property name="option" value="text"/>
         </module>
         <module name="EqualsHashCode"/>
+        <module name="MethodLength">  <!-- regla personalizada, cuando se activa, su max es 60 lineas (default es 150 lineas) -->
+            <property name="max" value="60"/>
+        </module>
     </module>
 </module>

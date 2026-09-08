@@ -7,6 +7,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.PrintStream;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import org.junit.jupiter.api.AfterEach;
@@ -27,8 +28,8 @@ class PipelineTest {
     void redirectStreams() {
         out = new ByteArrayOutputStream();
         err = new ByteArrayOutputStream();
-        System.setOut(new PrintStream(out));
-        System.setErr(new PrintStream(err));
+        System.setOut(new PrintStream(out, false, StandardCharsets.UTF_8));
+        System.setErr(new PrintStream(err, false, StandardCharsets.UTF_8));
     }
 
     @AfterEach
@@ -55,7 +56,9 @@ class PipelineTest {
         int exitCode = new Pipeline(path, null).validate();
 
         assertEquals(0, exitCode);
-        assertTrue(out.toString().isEmpty()); // Validation nunca debe mostrar output del programa
+        assertTrue(
+                out.toString(StandardCharsets.UTF_8)
+                        .isEmpty()); // Validation nunca debe mostrar output del programa
     }
 
     @Test
@@ -65,8 +68,8 @@ class PipelineTest {
         int exitCode = new Pipeline(path, null).validate();
 
         assertEquals(1, exitCode);
-        assertTrue(err.toString().contains("ERROR"));
-        assertTrue(err.toString().contains("No se puede asignar"));
+        assertTrue(err.toString(StandardCharsets.UTF_8).contains("ERROR"));
+        assertTrue(err.toString(StandardCharsets.UTF_8).contains("No se puede asignar"));
     }
 
     @Test
@@ -81,7 +84,7 @@ class PipelineTest {
         int exitCode = new Pipeline(path, null).execute();
 
         assertEquals(0, exitCode);
-        assertTrue(out.toString().contains("Joe"));
+        assertTrue(out.toString(StandardCharsets.UTF_8).contains("Joe"));
     }
 
     @Test
@@ -91,7 +94,7 @@ class PipelineTest {
         int exitCode = new Pipeline(path, null).format();
 
         assertEquals(0, exitCode);
-        assertTrue(out.toString().contains("let x : number = 5;"));
+        assertTrue(out.toString(StandardCharsets.UTF_8).contains("let x : number = 5;"));
     }
 
     @Test
@@ -101,7 +104,7 @@ class PipelineTest {
         int exitCode = new Pipeline(path, null).analyze();
 
         assertEquals(0, exitCode); // es un warning, no un error — no bloquea
-        assertTrue(err.toString().contains("WARNING"));
+        assertTrue(err.toString(StandardCharsets.UTF_8).contains("WARNING"));
     }
 
     @Test
@@ -113,7 +116,7 @@ class PipelineTest {
         int exitCode = new Pipeline(path, config.toString()).analyze();
 
         assertEquals(0, exitCode);
-        assertFalse(err.toString().contains("WARNING"));
-        assertFalse(err.toString().contains("ERROR"));
+        assertFalse(err.toString(StandardCharsets.UTF_8).contains("WARNING"));
+        assertFalse(err.toString(StandardCharsets.UTF_8).contains("ERROR"));
     }
 }

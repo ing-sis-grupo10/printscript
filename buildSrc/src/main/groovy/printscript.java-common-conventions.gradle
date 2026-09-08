@@ -1,7 +1,11 @@
+import com.github.spotbugs.snom.Effort
+import com.github.spotbugs.snom.Confidence
+
 plugins {
     id 'java'
     id 'checkstyle'
     id 'com.diffplug.spotless'
+    id 'com.github.spotbugs'
 }
 
 java {
@@ -36,6 +40,14 @@ spotless {
         endWithNewline()
     }
 }
+
+spotbugs {
+    toolVersion = '4.8.6'
+    effort.set(Effort.MAX) // regla personalizada, subimos el effort a max (el default es default que es medio)
+    reportLevel.set(Confidence.valueOf('LOW')) //regla personalizada, bajamos el reportlevel a low (el default es medium)
+    excludeFilter = rootProject.file('config/spotbugs/exclude.xml')
+}
+
 tasks.register('installGitHooks', Copy) {
     from("$rootDir/hooks/pre-commit")
     into("$rootDir/.git/hooks")

@@ -1,10 +1,10 @@
 ## Pre-commit hooks
 
-Este repo usa [pre-commit](https://pre-commit.com/) para correr chequeos automáticos antes de cada commit: formato básico de archivos y un `./gradlew check` completo (compilación, tests, cobertura mínima con Jacoco, y estilo de código con Checkstyle).
+Este repo usa un git hook local, instalado via Gradle, para correr chequeos automáticos antes de cada commit: reformatea el código con Spotless y corre los tests
 
 ### Instalación (una sola vez por máquina)
 
-1. Instalar `pre-commit`:
+1. Instalar el hook:
    ```bash
    ./gradlew installGitHooks
    ```

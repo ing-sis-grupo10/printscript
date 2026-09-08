@@ -1,0 +1,29 @@
+<FindBugsFilter>
+    <Match>
+        <Bug pattern="EI_EXPOSE_REP2"/>
+    </Match>
+    <Match>
+        <Class name="printscript.cli.Main"/>
+        <Bug pattern="DM_EXIT"/>
+    </Match>
+    <Match>
+        <Package name="printscript.interpreter.handler"/>
+        <Bug pattern="BC_UNCONFIRMED_CAST"/>
+    </Match>
+    <Match>
+        <Class name="printscript.interpreter.PipelineIntegrationTest"/>
+        <Bug pattern="DM_DEFAULT_ENCODING"/>
+    </Match>
+    <Match>
+        <Class name="printscript.lexer.PrintScriptLexer"/>
+        <Bug pattern="CT_CONSTRUCTOR_THROW"/>
+    </Match>
+    <Match>
+        <Class name="printscript.parser.ParseError"/>
+        <Bug pattern="SE_BAD_FIELD"/>
+    </Match>
+    <Match>
+        <Class name="printscript.parser.TokenStream"/>
+        <Bug pattern="CT_CONSTRUCTOR_THROW"/>
+    </Match>
+</FindBugsFilter>

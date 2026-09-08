@@ -7,6 +7,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import java.io.OutputStream;
 import java.io.PrintStream;
 import java.io.StringReader;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 import printscript.ast.Statement;
@@ -48,7 +49,10 @@ class PipelineIntegrationTest {
                                 new AssignmentHandler(evaluator),
                                 new PrintlnStatementHandler(
                                         evaluator,
-                                        new PrintStream(OutputStream.nullOutputStream()))));
+                                        new PrintStream(
+                                                OutputStream.nullOutputStream(),
+                                                false,
+                                                StandardCharsets.UTF_8))));
         var interpreter = new PrintScriptInterpreter(parser, new GlobalEnvironment(), handlers);
         return new PrintScriptAnalyzer(interpreter, rules);
     }
