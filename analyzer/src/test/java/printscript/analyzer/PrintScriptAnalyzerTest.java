@@ -61,7 +61,7 @@ class PrintScriptAnalyzerTest {
 
     @Test
     void acceptsSnakeCaseIdentifierWhenConfigured() {
-        var rules = new AnalyzerRules(AnalyzerRules.IdentifierCase.SNAKE_CASE, true);
+        var rules = new AnalyzerRules(AnalyzerRules.IdentifierCase.SNAKE_CASE, true, true);
         var declaration =
                 new VariableDeclaration("mi_variable", DeclaredType.NUMBER, Optional.empty(), span);
 
@@ -100,7 +100,7 @@ class PrintScriptAnalyzerTest {
 
     @Test
     void skipsPrintlnRuleWhenDisabled() {
-        var rules = new AnalyzerRules(AnalyzerRules.IdentifierCase.CAMEL_CASE, false);
+        var rules = new AnalyzerRules(AnalyzerRules.IdentifierCase.CAMEL_CASE, true, false);
         var expression =
                 new BinaryExpression(
                         new NumberLiteral(BigDecimal.ONE, span),
