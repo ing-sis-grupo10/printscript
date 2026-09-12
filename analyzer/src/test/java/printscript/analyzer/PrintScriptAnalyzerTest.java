@@ -14,6 +14,7 @@ import printscript.ast.BinaryExpression;
 import printscript.ast.BinaryOperator;
 import printscript.ast.DeclaredType;
 import printscript.ast.Identifier;
+import printscript.ast.IfStatement;
 import printscript.ast.NumberLiteral;
 import printscript.ast.PrintlnStatement;
 import printscript.ast.Statement;
@@ -124,6 +125,18 @@ class PrintScriptAnalyzerTest {
                 new Assignment("Mal_Nombrado", new NumberLiteral(BigDecimal.ONE, span), span);
 
         var analyzer = analyzerFor(List.of(assignment), AnalyzerRules.defaults());
+        analyzer.next();
+
+        assertTrue(analyzer.diagnostics().isEmpty());
+    }
+
+    @Test
+    void doesNotCheckIfStatements() {
+        var ifStatement =
+                new IfStatement(
+                        new Identifier("condicion", span), List.of(), Optional.empty(), span);
+
+        var analyzer = analyzerFor(List.of(ifStatement), AnalyzerRules.defaults());
         analyzer.next();
 
         assertTrue(analyzer.diagnostics().isEmpty());

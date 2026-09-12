@@ -47,6 +47,7 @@ public final class PrintScriptAnalyzer implements Analyzer {
                     checkIdentifier(declaration.name(), declaration.span());
             case PrintlnStatement println -> checkPrintlnArgument(println.argument());
             case Assignment assignment -> {}
+            case IfStatement ifStatement -> {}
         }
     }
 
