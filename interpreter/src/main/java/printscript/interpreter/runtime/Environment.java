@@ -6,6 +6,8 @@ import printscript.common.result.Diagnostic;
 import printscript.common.token.Span;
 
 public interface Environment {
+    Environment child();
+
     Optional<Diagnostic> declare(String name, DeclaredType type, Span declarationSite);
 
     void assign(String name, RuntimeValue value);
