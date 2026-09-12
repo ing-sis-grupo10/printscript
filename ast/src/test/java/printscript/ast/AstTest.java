@@ -45,6 +45,7 @@ class AstTest {
             case StringLiteral s -> "string:" + s.value();
             case Identifier id -> "identifier:" + id.name();
             case BinaryExpression b -> "binary:" + b.operator();
+            case BooleanLiteral b -> "boolean:" + b.value();
         };
     }
 
@@ -90,5 +91,11 @@ class AstTest {
     void switchOverExpressionCoversStringAndIdentifier() {
         assertEquals("string:hola", describe(new StringLiteral("hola", span)));
         assertEquals("identifier:x", describe(new Identifier("x", span)));
+    }
+
+    @Test
+    void switchOverExpressionCoversBoolean() {
+        assertEquals("boolean:true", describe(new BooleanLiteral(true, span)));
+        assertEquals("boolean:false", describe(new BooleanLiteral(false, span)));
     }
 }
