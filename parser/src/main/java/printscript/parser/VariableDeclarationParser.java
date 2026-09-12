@@ -13,12 +13,14 @@ public final class VariableDeclarationParser implements StatementParser {
 
     @Override
     public boolean canParse(TokenStream tokens) {
-        return tokens.peek().type() == TokenType.LET;
+        TokenType type = tokens.peek().type();
+        return type == TokenType.LET || type == TokenType.CONST;
     }
 
     @Override
     public Statement parse(TokenStream tokens, ExpressionParser expressionParser) {
-        Token letToken = tokens.consume();
+        Token keywordToken = tokens.consume();
+        boolean isConstant = keywordToken.type() == TokenType.CONST;
         Token nameToken = tokens.expect(TokenType.IDENTIFIER);
         tokens.expect(TokenType.COLON);
         Token typeToken = tokens.consume();
@@ -31,9 +33,10 @@ public final class VariableDeclarationParser implements StatementParser {
         }
 
         Token semicolon = tokens.expect(TokenType.SEMICOLON);
-        Span span = Span.merge(letToken.span(), semicolon.span());
+        Span span = Span.merge(keywordToken.span(), semicolon.span());
 
-        return new VariableDeclaration(nameToken.value(), declaredType, initializer, span);
+        return new VariableDeclaration(
+                nameToken.value(), declaredType, initializer, isConstant, span);
     }
 
     private DeclaredType parseDeclaredType(Token typeToken) {

@@ -37,7 +37,8 @@ class PrintScriptAnalyzerTest {
     @Test
     void acceptsCamelCaseIdentifierByDefault() {
         var declaration =
-                new VariableDeclaration("miVariable", DeclaredType.NUMBER, Optional.empty(), span);
+                new VariableDeclaration(
+                        "miVariable", DeclaredType.NUMBER, Optional.empty(), false, span);
 
         var analyzer = analyzerFor(List.of(declaration), AnalyzerRules.defaults());
         var result = analyzer.next();
@@ -50,7 +51,8 @@ class PrintScriptAnalyzerTest {
     @Test
     void reportsSnakeCaseIdentifierWhenCamelCaseIsExpected() {
         var declaration =
-                new VariableDeclaration("mi_variable", DeclaredType.NUMBER, Optional.empty(), span);
+                new VariableDeclaration(
+                        "mi_variable", DeclaredType.NUMBER, Optional.empty(), false, span);
 
         var analyzer = analyzerFor(List.of(declaration), AnalyzerRules.defaults());
         var result = analyzer.next();
@@ -63,7 +65,8 @@ class PrintScriptAnalyzerTest {
     void acceptsSnakeCaseIdentifierWhenConfigured() {
         var rules = new AnalyzerRules(AnalyzerRules.IdentifierCase.SNAKE_CASE, true);
         var declaration =
-                new VariableDeclaration("mi_variable", DeclaredType.NUMBER, Optional.empty(), span);
+                new VariableDeclaration(
+                        "mi_variable", DeclaredType.NUMBER, Optional.empty(), false, span);
 
         var analyzer = analyzerFor(List.of(declaration), rules);
         analyzer.next();

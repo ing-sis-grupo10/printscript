@@ -33,7 +33,8 @@ class AstTest {
 
     @Test
     void variableDeclarationWithoutInitializerHasEmptyOptional() {
-        var declaration = new VariableDeclaration("x", DeclaredType.NUMBER, Optional.empty(), span);
+        var declaration =
+                new VariableDeclaration("x", DeclaredType.NUMBER, Optional.empty(), false, span);
 
         assertTrue(declaration.initializer().isEmpty());
     }
