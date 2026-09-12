@@ -3,6 +3,7 @@ package printscript.parser;
 import java.math.BigDecimal;
 import printscript.ast.BinaryExpression;
 import printscript.ast.BinaryOperator;
+import printscript.ast.BooleanLiteral;
 import printscript.ast.Expression;
 import printscript.ast.Identifier;
 import printscript.ast.NumberLiteral;
@@ -51,6 +52,8 @@ public final class PrecedenceClimbingExpressionParser implements ExpressionParse
             case STRING_LITERAL -> new StringLiteral(token.value(), token.span());
             case IDENTIFIER -> new Identifier(token.value(), token.span());
             case MINUS -> parseNegativeNumber(tokens, token);
+            case TRUE -> new BooleanLiteral(true, token.span());
+            case FALSE -> new BooleanLiteral(false, token.span());
             default ->
                     throw new ParseError(
                             "Se esperaba un número, string o identificador", token.span());

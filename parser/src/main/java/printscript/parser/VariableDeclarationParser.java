@@ -40,6 +40,7 @@ public final class VariableDeclarationParser implements StatementParser {
         return switch (typeToken.type()) {
             case NUMBER_TYPE -> DeclaredType.NUMBER;
             case STRING_TYPE -> DeclaredType.STRING;
+            case BOOLEAN_TYPE -> DeclaredType.BOOLEAN;
             default ->
                     throw new ParseError(
                             "Tipo desconocido: " + typeToken.value(), typeToken.span());
