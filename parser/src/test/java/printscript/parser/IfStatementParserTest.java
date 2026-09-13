@@ -143,4 +143,28 @@ class IfStatementParserTest {
                 ParseError.class,
                 () -> ifParser.parse(streamOf(tokens), new PrecedenceClimbingExpressionParser()));
     }
+
+    @Test
+    void rejectsElseIfChaining() {
+        List<Result<Token>> tokens =
+                List.of(
+                        token(TokenType.IF, "if"),
+                        token(TokenType.LEFT_PAREN, "("),
+                        token(TokenType.IDENTIFIER, "a"),
+                        token(TokenType.RIGHT_PAREN, ")"),
+                        token(TokenType.LEFT_BRACE, "{"),
+                        token(TokenType.RIGHT_BRACE, "}"),
+                        token(TokenType.ELSE, "else"),
+                        token(TokenType.IF, "if"),
+                        token(TokenType.LEFT_PAREN, "("),
+                        token(TokenType.IDENTIFIER, "b"),
+                        token(TokenType.RIGHT_PAREN, ")"),
+                        token(TokenType.LEFT_BRACE, "{"),
+                        token(TokenType.RIGHT_BRACE, "}"));
+
+        var ifParser = buildParser();
+        assertThrows(
+                ParseError.class,
+                () -> ifParser.parse(streamOf(tokens), new PrecedenceClimbingExpressionParser()));
+    }
 }
