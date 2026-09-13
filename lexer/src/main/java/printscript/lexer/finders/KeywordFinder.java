@@ -15,7 +15,13 @@ public class KeywordFinder extends AbstractPatternFinder {
                     "let", TokenType.LET,
                     "number", TokenType.NUMBER_TYPE,
                     "string", TokenType.STRING_TYPE,
-                    "println", TokenType.PRINTLN);
+                    "boolean", TokenType.BOOLEAN_TYPE,
+                    "println", TokenType.PRINTLN,
+                    "const", TokenType.CONST,
+                    "if", TokenType.IF,
+                    "else", TokenType.ELSE,
+                    "true", TokenType.TRUE,
+                    "false", TokenType.FALSE);
 
     private final Pattern letterOrDigitPattern = new LetterOrDigitPattern();
 

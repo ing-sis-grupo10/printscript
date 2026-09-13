@@ -5,6 +5,7 @@ import java.math.MathContext;
 import java.util.Optional;
 import java.util.function.BinaryOperator;
 import printscript.ast.BinaryExpression;
+import printscript.ast.BooleanLiteral;
 import printscript.ast.DeclaredType;
 import printscript.ast.Expression;
 import printscript.ast.Identifier;
@@ -14,6 +15,7 @@ import printscript.common.result.Diagnostic;
 import printscript.common.result.Failure;
 import printscript.common.result.Result;
 import printscript.common.result.Success;
+import printscript.interpreter.runtime.RuntimeValue.BooleanValue;
 import printscript.interpreter.runtime.RuntimeValue.NumberValue;
 import printscript.interpreter.runtime.RuntimeValue.StringValue;
 
@@ -23,6 +25,7 @@ public final class ExpressionEvaluator {
         return switch (expression) {
             case NumberLiteral n -> Result.success(new NumberValue(n.value()));
             case StringLiteral s -> Result.success(new StringValue(s.value()));
+            case BooleanLiteral b -> Result.success(new BooleanValue(b.value()));
             case Identifier id -> lookupIdentifier(id, environment);
             case BinaryExpression b -> evaluateBinary(b, environment);
         };
@@ -105,6 +108,7 @@ public final class ExpressionEvaluator {
         return switch (value) {
             case NumberValue n -> DeclaredType.NUMBER;
             case StringValue s -> DeclaredType.STRING;
+            case BooleanValue b -> DeclaredType.BOOLEAN;
         };
     }
 
@@ -112,6 +116,7 @@ public final class ExpressionEvaluator {
         return switch (value) {
             case NumberValue n -> n.value().stripTrailingZeros().toPlainString();
             case StringValue s -> s.value();
+            case BooleanValue b -> String.valueOf(b.value());
         };
     }
 }

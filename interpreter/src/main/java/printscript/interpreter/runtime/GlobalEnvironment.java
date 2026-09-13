@@ -12,6 +12,21 @@ public final class GlobalEnvironment implements Environment {
 
     private final Map<String, Variable> variables = new HashMap<>();
 
+    private final Optional<Environment> parent;
+
+    public GlobalEnvironment() {
+        this.parent = Optional.empty();
+    }
+
+    private GlobalEnvironment(Environment parent) {
+        this.parent = Optional.of(parent);
+    }
+
+    @Override
+    public Environment child() {
+        return new GlobalEnvironment(this);
+    }
+
     @Override
     public Optional<Diagnostic> declare(String name, DeclaredType type, Span declarationSite) {
         if (variables.containsKey(name)) {
@@ -23,17 +38,29 @@ public final class GlobalEnvironment implements Environment {
 
     @Override
     public void assign(String name, RuntimeValue value) {
-        Variable current = variables.get(name);
-        variables.put(name, new Variable(current.type(), Optional.of(value)));
+        if (variables.containsKey(name)) {
+            Variable current = variables.get(name);
+            variables.put(name, new Variable(current.type(), Optional.of(value)));
+            return;
+        }
+        parent.ifPresent(p -> p.assign(name, value));
     }
 
     @Override
     public Optional<DeclaredType> typeOf(String name) {
-        return Optional.ofNullable(variables.get(name)).map(Variable::type);
+        Variable local = variables.get(name);
+        if (local != null) {
+            return Optional.of(local.type());
+        }
+        return parent.flatMap(p -> p.typeOf(name));
     }
 
     @Override
     public Optional<RuntimeValue> valueOf(String name) {
-        return Optional.ofNullable(variables.get(name)).flatMap(Variable::value);
+        Variable local = variables.get(name);
+        if (local != null) {
+            return local.value();
+        }
+        return parent.flatMap(p -> p.valueOf(name));
     }
 }

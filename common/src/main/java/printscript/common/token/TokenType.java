@@ -5,8 +5,14 @@ public enum TokenType {
     IDENTIFIER,
     NUMBER_TYPE,
     STRING_TYPE,
+    BOOLEAN_TYPE,
     NUMBER_LITERAL,
     STRING_LITERAL,
+    TRUE,
+    FALSE,
+    CONST,
+    IF,
+    ELSE,
     ASSIGN,
     COLON,
     SEMICOLON,
@@ -17,5 +23,7 @@ public enum TokenType {
     PRINTLN,
     LEFT_PAREN,
     RIGHT_PAREN,
+    LEFT_BRACE,
+    RIGHT_BRACE,
     EOF
 }

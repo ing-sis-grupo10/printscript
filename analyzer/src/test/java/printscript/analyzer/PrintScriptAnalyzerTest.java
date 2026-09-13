@@ -14,6 +14,7 @@ import printscript.ast.BinaryExpression;
 import printscript.ast.BinaryOperator;
 import printscript.ast.DeclaredType;
 import printscript.ast.Identifier;
+import printscript.ast.IfStatement;
 import printscript.ast.NumberLiteral;
 import printscript.ast.PrintlnStatement;
 import printscript.ast.Statement;
@@ -37,7 +38,8 @@ class PrintScriptAnalyzerTest {
     @Test
     void acceptsCamelCaseIdentifierByDefault() {
         var declaration =
-                new VariableDeclaration("miVariable", DeclaredType.NUMBER, Optional.empty(), span);
+                new VariableDeclaration(
+                        "miVariable", DeclaredType.NUMBER, Optional.empty(), false, span);
 
         var analyzer = analyzerFor(List.of(declaration), AnalyzerRules.defaults());
         var result = analyzer.next();
@@ -50,7 +52,8 @@ class PrintScriptAnalyzerTest {
     @Test
     void reportsSnakeCaseIdentifierWhenCamelCaseIsExpected() {
         var declaration =
-                new VariableDeclaration("mi_variable", DeclaredType.NUMBER, Optional.empty(), span);
+                new VariableDeclaration(
+                        "mi_variable", DeclaredType.NUMBER, Optional.empty(), false, span);
 
         var analyzer = analyzerFor(List.of(declaration), AnalyzerRules.defaults());
         var result = analyzer.next();
@@ -63,7 +66,8 @@ class PrintScriptAnalyzerTest {
     void acceptsSnakeCaseIdentifierWhenConfigured() {
         var rules = new AnalyzerRules(AnalyzerRules.IdentifierCase.SNAKE_CASE, true);
         var declaration =
-                new VariableDeclaration("mi_variable", DeclaredType.NUMBER, Optional.empty(), span);
+                new VariableDeclaration(
+                        "mi_variable", DeclaredType.NUMBER, Optional.empty(), false, span);
 
         var analyzer = analyzerFor(List.of(declaration), rules);
         analyzer.next();
@@ -121,6 +125,18 @@ class PrintScriptAnalyzerTest {
                 new Assignment("Mal_Nombrado", new NumberLiteral(BigDecimal.ONE, span), span);
 
         var analyzer = analyzerFor(List.of(assignment), AnalyzerRules.defaults());
+        analyzer.next();
+
+        assertTrue(analyzer.diagnostics().isEmpty());
+    }
+
+    @Test
+    void doesNotCheckIfStatements() {
+        var ifStatement =
+                new IfStatement(
+                        new Identifier("condicion", span), List.of(), Optional.empty(), span);
+
+        var analyzer = analyzerFor(List.of(ifStatement), AnalyzerRules.defaults());
         analyzer.next();
 
         assertTrue(analyzer.diagnostics().isEmpty());
