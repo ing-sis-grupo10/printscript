@@ -8,6 +8,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
 import java.io.StringReader;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 import printscript.ast.Statement;
@@ -16,15 +17,19 @@ import printscript.common.result.Result;
 import printscript.common.result.Success;
 import printscript.interpreter.handler.AssignmentHandler;
 import printscript.interpreter.handler.HandlerRegistry;
+import printscript.interpreter.handler.IfStatementHandler;
 import printscript.interpreter.handler.PrintlnStatementHandler;
+import printscript.interpreter.handler.StatementHandler;
 import printscript.interpreter.handler.VariableDeclarationHandler;
 import printscript.interpreter.runtime.ExpressionEvaluator;
 import printscript.interpreter.runtime.GlobalEnvironment;
 import printscript.lexer.PrintScriptLexer;
 import printscript.parser.AssignmentParser;
+import printscript.parser.IfStatementParser;
 import printscript.parser.PrecedenceClimbingExpressionParser;
 import printscript.parser.PrintScriptParser;
 import printscript.parser.PrintlnStatementParser;
+import printscript.parser.StatementParser;
 import printscript.parser.VariableDeclarationParser;
 
 class PipelineIntegrationTest {
@@ -33,23 +38,26 @@ class PipelineIntegrationTest {
 
     private RunResult run(String source) {
         var lexer = new PrintScriptLexer(new StringReader(source));
+
+        List<StatementParser> statementParsers = new ArrayList<>();
+        statementParsers.add(new VariableDeclarationParser());
+        statementParsers.add(new AssignmentParser());
+        statementParsers.add(new PrintlnStatementParser());
+        statementParsers.add(new IfStatementParser(() -> statementParsers));
+
         var parser =
                 new PrintScriptParser(
-                        lexer,
-                        List.of(
-                                new VariableDeclarationParser(),
-                                new AssignmentParser(),
-                                new PrintlnStatementParser()),
-                        new PrecedenceClimbingExpressionParser());
+                        lexer, statementParsers, new PrecedenceClimbingExpressionParser());
 
         var output = new ByteArrayOutputStream();
         var evaluator = new ExpressionEvaluator();
-        var registry =
-                new HandlerRegistry(
-                        List.of(
-                                new VariableDeclarationHandler(evaluator),
-                                new AssignmentHandler(evaluator),
-                                new PrintlnStatementHandler(evaluator, new PrintStream(output))));
+        List<StatementHandler> statementHandlers = new ArrayList<>();
+        HandlerRegistry registry = new HandlerRegistry(statementHandlers);
+        statementHandlers.add(new VariableDeclarationHandler(evaluator));
+        statementHandlers.add(new AssignmentHandler(evaluator));
+        statementHandlers.add(new PrintlnStatementHandler(evaluator, new PrintStream(output)));
+        statementHandlers.add(new IfStatementHandler(evaluator, () -> registry));
+
         var interpreter = new PrintScriptInterpreter(parser, new GlobalEnvironment(), registry);
 
         boolean hadFailure = false;
@@ -206,5 +214,106 @@ class PipelineIntegrationTest {
         RunResult result = run(source);
 
         assertTrue(result.hadFailure());
+    }
+
+    @Test
+    void ifTrueExecutesThenBranch() {
+        String source =
+                """
+        let flag: boolean = true;
+        if (flag) {
+            println("dentro");
+        }
+        """;
+
+        RunResult result = run(source);
+
+        assertEquals("dentro", result.output());
+        assertFalse(result.hadFailure());
+    }
+
+    @Test
+    void ifFalseWithElseExecutesElseBranch() {
+        String source =
+                """
+        let flag: boolean = false;
+        if (flag) {
+            println("then");
+        } else {
+            println("else");
+        }
+        """;
+
+        RunResult result = run(source);
+
+        assertEquals("else", result.output());
+        assertFalse(result.hadFailure());
+    }
+
+    @Test
+    void ifFalseWithoutElseExecutesNothing() {
+        String source =
+                """
+        let flag: boolean = false;
+        if (flag) {
+            println("no debería imprimirse");
+        }
+        println("después");
+        """;
+
+        RunResult result = run(source);
+
+        assertEquals("después", result.output());
+        assertFalse(result.hadFailure());
+    }
+
+    @Test
+    void variableDeclaredInsideIfDoesNotLeakOutside() {
+        String source =
+                """
+        let flag: boolean = true;
+        if (flag) {
+            let mensaje: string = "hola";
+        }
+        println(mensaje);
+        """;
+
+        RunResult result = run(source);
+
+        assertTrue(result.hadFailure());
+    }
+
+    @Test
+    void assignmentInsideIfAffectsOuterVariable() {
+        String source =
+                """
+        let contador: number = 0;
+        let flag: boolean = true;
+        if (flag) {
+            contador = 1;
+        }
+        println(contador);
+        """;
+
+        RunResult result = run(source);
+
+        assertEquals("1", result.output());
+        assertFalse(result.hadFailure());
+    }
+
+    @Test
+    void reportsNonBooleanCondition() {
+        String source =
+                """
+        let flag: number = 1;
+        if (flag) {
+            println("no debería llegar acá");
+        }
+        """;
+
+        RunResult result = run(source);
+
+        assertTrue(result.hadFailure());
+        assertEquals("", result.output());
     }
 }
