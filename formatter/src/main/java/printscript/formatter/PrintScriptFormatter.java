@@ -14,6 +14,7 @@ import printscript.lexer.PrintScriptLexer;
 
 public final class PrintScriptFormatter implements Formatter {
     private final FormattingRules rules;
+    private int depth;
 
     public PrintScriptFormatter(FormattingRules rules) {
         this.rules = rules;
@@ -22,6 +23,7 @@ public final class PrintScriptFormatter implements Formatter {
     @Override
     public void format(Reader source, Writer out) {
         try {
+            depth = 0;
             PrintScriptLexer lexer = new PrintScriptLexer(source);
             Token previous = null;
 
@@ -31,10 +33,19 @@ public final class PrintScriptFormatter implements Formatter {
                     break;
                 }
 
+                if (current.type() == TokenType.RIGHT_BRACE) {
+                    depth--;
+                }
+
                 if (previous != null) {
                     out.write(separator(previous, current));
                 }
                 out.write(render(current));
+
+                if (current.type() == TokenType.LEFT_BRACE) {
+                    depth++;
+                }
+
                 previous = current;
             }
         } catch (IOException e) {
@@ -62,14 +73,29 @@ public final class PrintScriptFormatter implements Formatter {
     }
 
     private String separator(Token previous, Token current) {
+        if (current.type() == TokenType.LEFT_BRACE) {
+            return rules.ifBraceSameLine() ? " " : "\n" + indent();
+        }
+        if (previous.type() == TokenType.LEFT_BRACE) {
+            return "\n" + indent();
+        }
+        if (current.type() == TokenType.RIGHT_BRACE) {
+            return "\n" + indent();
+        }
+        if (previous.type() == TokenType.RIGHT_BRACE) {
+            return current.type() == TokenType.ELSE ? " " : "\n" + indent();
+        }
         if (current.type() == TokenType.PRINTLN) {
             return "\n".repeat(1 + rules.blankLinesBeforePrintln());
         }
         if (previous.type() == TokenType.SEMICOLON) {
-            return "\n";
+            return "\n" + indent();
         }
         if (current.type() == TokenType.SEMICOLON) {
             return "";
+        }
+        if (previous.type() == TokenType.IF && current.type() == TokenType.LEFT_PAREN) {
+            return " ";
         }
         if (isOperator(previous.type()) || isOperator(current.type())) {
             return " ";
@@ -92,6 +118,10 @@ public final class PrintScriptFormatter implements Formatter {
             return "";
         }
         return " ";
+    }
+
+    private String indent() {
+        return " ".repeat(Math.max(depth, 0) * rules.indentSizeInsideIf());
     }
 
     private boolean isOperator(TokenType type) {

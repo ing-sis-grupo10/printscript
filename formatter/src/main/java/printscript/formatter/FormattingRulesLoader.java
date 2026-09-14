@@ -14,13 +14,17 @@ public final class FormattingRulesLoader {
         boolean spaceBeforeAssign = getBoolean(json, "assignment_space_before_equals", true);
         boolean spaceAfterAssign = getBoolean(json, "assignment_space_after_equals", true);
         int blankLinesBeforePrintln = getInt(json, "println_new_lines_before_call", 1);
+        boolean ifBraceSameLine = getBoolean(json, "if_brace_same_line", true);
+        int indentSizeInsideIf = getInt(json, "if_indent_size", 2);
 
         return new FormattingRules(
                 spaceBeforeColon,
                 spaceAfterColon,
                 spaceBeforeAssign,
                 spaceAfterAssign,
-                Math.min(blankLinesBeforePrintln, 2));
+                Math.min(blankLinesBeforePrintln, 2),
+                ifBraceSameLine,
+                indentSizeInsideIf);
     }
 
     private boolean getBoolean(JsonObject json, String key, boolean defaultValue) {

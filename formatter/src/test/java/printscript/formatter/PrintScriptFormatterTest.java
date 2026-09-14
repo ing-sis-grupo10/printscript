@@ -18,7 +18,7 @@ class PrintScriptFormatterTest {
     @Test
     void formatsWithAllSpacingRulesOn() {
         String source = "let     a:number=13*4\n;\nlet   b :string  =   \"hi\" ;";
-        var rules = new FormattingRules(true, true, true, true, 1);
+        var rules = new FormattingRules(true, true, true, true, 1, true, 2);
 
         String result = format(source, rules);
 
@@ -28,7 +28,7 @@ class PrintScriptFormatterTest {
     @Test
     void formatsWithAllSpacingRulesOff() {
         String source = "let   a : number = 2 + 2 ;";
-        var rules = new FormattingRules(false, false, false, false, 1);
+        var rules = new FormattingRules(false, false, false, false, 1, true, 2);
 
         String result = format(source, rules);
 
@@ -38,7 +38,7 @@ class PrintScriptFormatterTest {
     @Test
     void spaceBeforeColonOnlyAppliesBeforeNotAfter() {
         String source = "let a:number=5;";
-        var rules = new FormattingRules(true, false, false, false, 1);
+        var rules = new FormattingRules(true, false, false, false, 1, true, 2);
 
         String result = format(source, rules);
 
@@ -48,7 +48,7 @@ class PrintScriptFormatterTest {
     @Test
     void spaceAfterAssignOnlyAppliesAfterNotBefore() {
         String source = "let a:number=5;";
-        var rules = new FormattingRules(false, false, false, true, 1);
+        var rules = new FormattingRules(false, false, false, true, 1, true, 2);
 
         String result = format(source, rules);
 
@@ -58,7 +58,7 @@ class PrintScriptFormatterTest {
     @Test
     void printlnWithZeroBlankLinesBefore() {
         String source = "let a: string;\nprintln(a);";
-        var rules = new FormattingRules(true, true, true, true, 0);
+        var rules = new FormattingRules(true, true, true, true, 0, true, 2);
 
         String result = format(source, rules);
 
@@ -68,7 +68,7 @@ class PrintScriptFormatterTest {
     @Test
     void printlnWithTwoBlankLinesBefore() {
         String source = "let a: string;\nprintln(a);";
-        var rules = new FormattingRules(true, true, true, true, 2);
+        var rules = new FormattingRules(true, true, true, true, 2, true, 2);
 
         String result = format(source, rules);
 
@@ -83,5 +83,44 @@ class PrintScriptFormatterTest {
         String result = format(source, rules);
 
         assertEquals("println(\"hola\");", result);
+    }
+
+    @Test
+    void ifBraceGoesOnNextLineWhenConfigured() {
+        String source =
+                "let something: boolean = true;\nif (something) {\nprintln(\"Entered if\");\n}";
+        var rules = new FormattingRules(true, true, true, true, 1, false, 2);
+
+        String result = format(source, rules);
+
+        assertEquals(
+                "let something : boolean = true;\nif (something)\n{\n  println(\"Entered if\");\n}",
+                result);
+    }
+
+    @Test
+    void ifBraceStaysOnSameLineByDefault() {
+        String source =
+                "let something: boolean = true;\nif (something)\n{\nprintln(\"Entered if\");\n}";
+        var rules = FormattingRules.defaults();
+
+        String result = format(source, rules);
+
+        assertEquals(
+                "let something : boolean = true;\nif (something) {\n  println(\"Entered if\");\n}",
+                result);
+    }
+
+    @Test
+    void indentsNestedIfBlocksAccordingToConfiguredSize() {
+        String source =
+                "let something: boolean = true;\nif (something) {\nif (something) {\nprintln(\"Entered two ifs\");\n}\n}";
+        var rules = new FormattingRules(true, true, true, true, 1, true, 4);
+
+        String result = format(source, rules);
+
+        assertEquals(
+                "let something : boolean = true;\nif (something) {\n    if (something) {\n        println(\"Entered two ifs\");\n    }\n}",
+                result);
     }
 }
