@@ -116,6 +116,19 @@ class PrintScriptAnalyzerTest {
     }
 
     @Test
+    void skipsIdentifierCaseCheckWhenDisabled() {
+        var rules = new AnalyzerRules(AnalyzerRules.IdentifierCase.CAMEL_CASE, false, true);
+        var declaration =
+                new VariableDeclaration(
+                        "mal_nombrado", DeclaredType.NUMBER, Optional.empty(), span);
+
+        var analyzer = analyzerFor(List.of(declaration), rules);
+        analyzer.next();
+
+        assertTrue(analyzer.diagnostics().isEmpty());
+    }
+
+    @Test
     void doesNotCheckAssignments() {
         var assignment =
                 new Assignment("Mal_Nombrado", new NumberLiteral(BigDecimal.ONE, span), span);
