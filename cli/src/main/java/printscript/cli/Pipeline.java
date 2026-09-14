@@ -24,16 +24,20 @@ import printscript.formatter.PrintScriptFormatter;
 import printscript.interpreter.PrintScriptInterpreter;
 import printscript.interpreter.handler.AssignmentHandler;
 import printscript.interpreter.handler.HandlerRegistry;
+import printscript.interpreter.handler.IfStatementHandler;
 import printscript.interpreter.handler.PrintlnStatementHandler;
+import printscript.interpreter.handler.StatementHandler;
 import printscript.interpreter.handler.VariableDeclarationHandler;
 import printscript.interpreter.runtime.Environment;
 import printscript.interpreter.runtime.ExpressionEvaluator;
 import printscript.interpreter.runtime.GlobalEnvironment;
 import printscript.lexer.PrintScriptLexer;
 import printscript.parser.AssignmentParser;
+import printscript.parser.IfStatementParser;
 import printscript.parser.PrecedenceClimbingExpressionParser;
 import printscript.parser.PrintScriptParser;
 import printscript.parser.PrintlnStatementParser;
+import printscript.parser.StatementParser;
 import printscript.parser.VariableDeclarationParser;
 
 final class Pipeline {
@@ -97,22 +101,25 @@ final class Pipeline {
 
     private PrintScriptInterpreter buildInterpreter(Reader source, PrintStream out) {
         var lexer = new PrintScriptLexer(source);
+
+        List<StatementParser> statementParsers = new ArrayList<>();
+        statementParsers.add(new VariableDeclarationParser());
+        statementParsers.add(new AssignmentParser());
+        statementParsers.add(new PrintlnStatementParser());
+        statementParsers.add(new IfStatementParser(() -> statementParsers));
+
         var parser =
                 new PrintScriptParser(
-                        lexer,
-                        List.of(
-                                new VariableDeclarationParser(),
-                                new AssignmentParser(),
-                                new PrintlnStatementParser()),
-                        new PrecedenceClimbingExpressionParser());
+                        lexer, statementParsers, new PrecedenceClimbingExpressionParser());
 
         var evaluator = new ExpressionEvaluator();
-        var handlers =
-                new HandlerRegistry(
-                        List.of(
-                                new VariableDeclarationHandler(evaluator),
-                                new AssignmentHandler(evaluator),
-                                new PrintlnStatementHandler(evaluator, out)));
+        List<StatementHandler> statementHandlers = new ArrayList<>();
+        HandlerRegistry handlers = new HandlerRegistry(statementHandlers);
+        statementHandlers.add(new VariableDeclarationHandler(evaluator));
+        statementHandlers.add(new AssignmentHandler(evaluator));
+        statementHandlers.add(new PrintlnStatementHandler(evaluator, out));
+        statementHandlers.add(new IfStatementHandler(evaluator, () -> handlers));
+
         Environment environment = new GlobalEnvironment();
         return new PrintScriptInterpreter(parser, environment, handlers);
     }

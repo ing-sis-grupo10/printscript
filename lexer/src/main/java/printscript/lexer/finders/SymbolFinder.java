@@ -20,7 +20,9 @@ public class SymbolFinder implements Finder {
                     Map.entry('*', TokenType.STAR),
                     Map.entry('/', TokenType.SLASH),
                     Map.entry('(', TokenType.LEFT_PAREN),
-                    Map.entry(')', TokenType.RIGHT_PAREN));
+                    Map.entry(')', TokenType.RIGHT_PAREN),
+                    Map.entry('{', TokenType.LEFT_BRACE),
+                    Map.entry('}', TokenType.RIGHT_BRACE));
 
     @Override
     public boolean canHandle(char currentChar) {

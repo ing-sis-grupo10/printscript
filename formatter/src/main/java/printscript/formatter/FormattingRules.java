@@ -5,8 +5,10 @@ public record FormattingRules(
         boolean spaceAfterColon,
         boolean spaceBeforeAssign,
         boolean spaceAfterAssign,
-        int blankLinesBeforePrintln) {
+        int blankLinesBeforePrintln,
+        boolean ifBraceSameLine,
+        int indentSizeInsideIf) {
     public static FormattingRules defaults() {
-        return new FormattingRules(true, true, true, true, 1);
+        return new FormattingRules(true, true, true, true, 1, true, 2);
     }
 }

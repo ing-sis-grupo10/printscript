@@ -29,21 +29,13 @@ public final class PrintScriptParser implements Iterator<Result<Statement>> {
 
     @Override
     public Result<Statement> next() {
-        for (StatementParser statementParser : statementParsers) {
-            if (statementParser.canParse(tokens)) {
-                try {
-                    return Result.success(statementParser.parse(tokens, expressionParser));
-                } catch (ParseError e) {
-                    recoverToNextStatement();
-                    return Result.failure(Diagnostic.error(e.getMessage(), e.span()));
-                }
-            }
+        try {
+            return Result.success(
+                    StatementDispatcher.dispatch(tokens, statementParsers, expressionParser));
+        } catch (ParseError e) {
+            recoverToNextStatement();
+            return Result.failure(Diagnostic.error(e.getMessage(), e.span()));
         }
-
-        Token unexpected = tokens.consume();
-        recoverToNextStatement();
-        return Result.failure(
-                Diagnostic.error("No se esperaba: " + unexpected.value(), unexpected.span()));
     }
 
     private void recoverToNextStatement() {
