@@ -55,7 +55,11 @@ public final class VariableDeclarationHandler implements StatementHandler {
         }
 
         environment
-                .declare(declaration.name(), declaredType, declaration.span())
+                .declare(
+                        declaration.name(),
+                        declaredType,
+                        declaration.isConstant(),
+                        declaration.span())
                 .ifPresent(diagnostics::add);
 
         if (!diagnostics.isEmpty()) {

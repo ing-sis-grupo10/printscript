@@ -34,6 +34,13 @@ public final class AssignmentHandler implements StatementHandler {
                             "Variable no declarada: " + assignment.name(), assignment.span()));
         }
 
+        if (environment.isConstant(assignment.name())) {
+            return Result.failure(
+                    Diagnostic.error(
+                            "No se puede reasignar la constante: " + assignment.name(),
+                            assignment.span()));
+        }
+
         Result<RuntimeValue> value = evaluator.evaluate(assignment.value(), environment);
         if (value instanceof Failure<RuntimeValue> f) {
             return Result.failure(f.diagnostics());

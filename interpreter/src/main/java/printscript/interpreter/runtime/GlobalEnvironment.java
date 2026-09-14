@@ -8,7 +8,7 @@ import printscript.common.result.Diagnostic;
 import printscript.common.token.Span;
 
 public final class GlobalEnvironment implements Environment {
-    private record Variable(DeclaredType type, Optional<RuntimeValue> value) {}
+    private record Variable(DeclaredType type, Optional<RuntimeValue> value, boolean isConstant) {}
 
     private final Map<String, Variable> variables = new HashMap<>();
 
@@ -28,11 +28,12 @@ public final class GlobalEnvironment implements Environment {
     }
 
     @Override
-    public Optional<Diagnostic> declare(String name, DeclaredType type, Span declarationSite) {
+    public Optional<Diagnostic> declare(
+            String name, DeclaredType type, boolean isConstant, Span declarationSite) {
         if (variables.containsKey(name)) {
             return Optional.of(Diagnostic.error("Variable ya declarada: " + name, declarationSite));
         }
-        variables.put(name, new Variable(type, Optional.empty()));
+        variables.put(name, new Variable(type, Optional.empty(), isConstant));
         return Optional.empty();
     }
 
@@ -40,7 +41,8 @@ public final class GlobalEnvironment implements Environment {
     public void assign(String name, RuntimeValue value) {
         if (variables.containsKey(name)) {
             Variable current = variables.get(name);
-            variables.put(name, new Variable(current.type(), Optional.of(value)));
+            variables.put(
+                    name, new Variable(current.type(), Optional.of(value), current.isConstant()));
             return;
         }
         parent.ifPresent(p -> p.assign(name, value));
@@ -62,5 +64,14 @@ public final class GlobalEnvironment implements Environment {
             return local.value();
         }
         return parent.flatMap(p -> p.valueOf(name));
+    }
+
+    @Override
+    public boolean isConstant(String name) {
+        Variable local = variables.get(name);
+        if (local != null) {
+            return local.isConstant();
+        }
+        return parent.map(p -> p.isConstant(name)).orElse(false);
     }
 }
