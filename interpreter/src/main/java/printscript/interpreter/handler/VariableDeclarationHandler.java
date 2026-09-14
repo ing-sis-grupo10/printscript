@@ -39,16 +39,12 @@ public final class VariableDeclarationHandler implements StatementHandler {
             switch (value) {
                 case Failure<RuntimeValue> f -> diagnostics.addAll(f.diagnostics());
                 case Success<RuntimeValue> s -> {
-                    if (evaluator.typeOf(s.value()) == declaredType) {
-                        initializerValue = Optional.of(s.value());
-                    } else {
-                        diagnostics.add(
-                                Diagnostic.error(
-                                        "No se puede asignar "
-                                                + evaluator.typeOf(s.value())
-                                                + " a una variable de tipo "
-                                                + declaredType,
-                                        initializer.span()));
+                    Result<RuntimeValue> coerced =
+                            evaluator.coerceForAssignment(
+                                    initializer, s.value(), declaredType, initializer.span());
+                    switch (coerced) {
+                        case Success<RuntimeValue> ok -> initializerValue = Optional.of(ok.value());
+                        case Failure<RuntimeValue> f -> diagnostics.addAll(f.diagnostics());
                     }
                 }
             }

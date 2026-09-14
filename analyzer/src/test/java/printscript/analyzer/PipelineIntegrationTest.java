@@ -41,7 +41,7 @@ class PipelineIntegrationTest {
                                 new PrintlnStatementParser()),
                         new PrecedenceClimbingExpressionParser());
 
-        var evaluator = new ExpressionEvaluator();
+        var evaluator = new ExpressionEvaluator(prompt -> prompt);
         var handlers =
                 new HandlerRegistry(
                         List.of(

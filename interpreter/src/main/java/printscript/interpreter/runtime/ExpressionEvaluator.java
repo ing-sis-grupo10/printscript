@@ -4,22 +4,22 @@ import java.math.BigDecimal;
 import java.math.MathContext;
 import java.util.Optional;
 import java.util.function.BinaryOperator;
-import printscript.ast.BinaryExpression;
-import printscript.ast.BooleanLiteral;
-import printscript.ast.DeclaredType;
-import printscript.ast.Expression;
-import printscript.ast.Identifier;
-import printscript.ast.NumberLiteral;
-import printscript.ast.StringLiteral;
+import printscript.ast.*;
 import printscript.common.result.Diagnostic;
 import printscript.common.result.Failure;
 import printscript.common.result.Result;
 import printscript.common.result.Success;
+import printscript.common.token.Span;
 import printscript.interpreter.runtime.RuntimeValue.BooleanValue;
 import printscript.interpreter.runtime.RuntimeValue.NumberValue;
 import printscript.interpreter.runtime.RuntimeValue.StringValue;
 
 public final class ExpressionEvaluator {
+    private final InputSource inputSource;
+
+    public ExpressionEvaluator(InputSource inputSource) {
+        this.inputSource = inputSource;
+    }
 
     public Result<RuntimeValue> evaluate(Expression expression, Environment environment) {
         return switch (expression) {
@@ -28,6 +28,8 @@ public final class ExpressionEvaluator {
             case BooleanLiteral b -> Result.success(new BooleanValue(b.value()));
             case Identifier id -> lookupIdentifier(id, environment);
             case BinaryExpression b -> evaluateBinary(b, environment);
+            case ReadInputExpression r -> evaluateReadInput(r, environment);
+            case ReadEnvExpression r -> evaluateReadEnv(r, environment);
         };
     }
 
@@ -100,6 +102,43 @@ public final class ExpressionEvaluator {
         return Result.success(new NumberValue(l.value().divide(r.value(), MathContext.DECIMAL64)));
     }
 
+    private Result<RuntimeValue> evaluateReadInput(
+            ReadInputExpression expression, Environment environment) {
+        Result<RuntimeValue> messageResult = evaluate(expression.message(), environment);
+        if (messageResult instanceof Failure<RuntimeValue> f) {
+            return f;
+        }
+        RuntimeValue messageValue = ((Success<RuntimeValue>) messageResult).value();
+        if (!(messageValue instanceof StringValue message)) {
+            return Result.failure(
+                    Diagnostic.error(
+                            "El mensaje de readInput debe ser string",
+                            expression.message().span()));
+        }
+        return Result.success(new StringValue(inputSource.read(message.value())));
+    }
+
+    private Result<RuntimeValue> evaluateReadEnv(
+            ReadEnvExpression expression, Environment environment) {
+        Result<RuntimeValue> nameResult = evaluate(expression.name(), environment);
+        if (nameResult instanceof Failure<RuntimeValue> f) {
+            return f;
+        }
+        RuntimeValue nameValue = ((Success<RuntimeValue>) nameResult).value();
+        if (!(nameValue instanceof StringValue name)) {
+            return Result.failure(
+                    Diagnostic.error(
+                            "El nombre de readEnv debe ser string", expression.name().span()));
+        }
+        String value = System.getenv(name.value());
+        if (value == null) {
+            return Result.failure(
+                    Diagnostic.error(
+                            "Variable de entorno no definida: " + name.value(), expression.span()));
+        }
+        return Result.success(new StringValue(value));
+    }
+
     private BigDecimal numberOf(RuntimeValue value) {
         return ((NumberValue) value).value();
     }
@@ -118,5 +157,58 @@ public final class ExpressionEvaluator {
             case StringValue s -> s.value();
             case BooleanValue b -> String.valueOf(b.value());
         };
+    }
+
+    public Result<RuntimeValue> coerceForAssignment(
+            Expression source, RuntimeValue value, DeclaredType expectedType, Span span) {
+        if (typeOf(value) == expectedType) {
+            return Result.success(value);
+        }
+
+        boolean allowsCoercion =
+                source instanceof ReadInputExpression || source instanceof ReadEnvExpression;
+        if (allowsCoercion && value instanceof StringValue s) {
+            Optional<RuntimeValue> coerced = tryCoerce(s.value(), expectedType);
+            if (coerced.isPresent()) {
+                return Result.success(coerced.get());
+            }
+            return Result.failure(
+                    Diagnostic.error(
+                            "No se pudo convertir \"" + s.value() + "\" a " + expectedType, span));
+        }
+
+        return Result.failure(
+                Diagnostic.error(
+                        "No se puede asignar "
+                                + typeOf(value)
+                                + " a una variable de tipo "
+                                + expectedType,
+                        span));
+    }
+
+    private Optional<RuntimeValue> tryCoerce(String raw, DeclaredType expectedType) {
+        return switch (expectedType) {
+            case NUMBER -> tryParseNumber(raw);
+            case BOOLEAN -> tryParseBoolean(raw);
+            case STRING -> Optional.of(new StringValue(raw));
+        };
+    }
+
+    private Optional<RuntimeValue> tryParseNumber(String raw) {
+        try {
+            return Optional.of(new NumberValue(new BigDecimal(raw)));
+        } catch (NumberFormatException e) {
+            return Optional.empty();
+        }
+    }
+
+    private Optional<RuntimeValue> tryParseBoolean(String raw) {
+        if (raw.equals("true")) {
+            return Optional.of(new BooleanValue(true));
+        }
+        if (raw.equals("false")) {
+            return Optional.of(new BooleanValue(false));
+        }
+        return Optional.empty();
     }
 }

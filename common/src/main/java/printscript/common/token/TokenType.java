@@ -13,6 +13,8 @@ public enum TokenType {
     CONST,
     IF,
     ELSE,
+    READ_INPUT,
+    READ_ENV,
     ASSIGN,
     COLON,
     SEMICOLON,

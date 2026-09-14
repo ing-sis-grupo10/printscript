@@ -50,7 +50,7 @@ class PipelineIntegrationTest {
                         lexer, statementParsers, new PrecedenceClimbingExpressionParser());
 
         var output = new ByteArrayOutputStream();
-        var evaluator = new ExpressionEvaluator();
+        var evaluator = new ExpressionEvaluator(prompt -> prompt);
         List<StatementHandler> statementHandlers = new ArrayList<>();
         HandlerRegistry registry = new HandlerRegistry(statementHandlers);
         statementHandlers.add(new VariableDeclarationHandler(evaluator));
