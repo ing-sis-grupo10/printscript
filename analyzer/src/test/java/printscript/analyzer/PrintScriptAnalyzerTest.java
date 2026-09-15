@@ -64,7 +64,7 @@ class PrintScriptAnalyzerTest {
 
     @Test
     void acceptsSnakeCaseIdentifierWhenConfigured() {
-        var rules = new AnalyzerRules(AnalyzerRules.IdentifierCase.SNAKE_CASE, true);
+        var rules = new AnalyzerRules(AnalyzerRules.IdentifierCase.SNAKE_CASE, true, true);
         var declaration =
                 new VariableDeclaration(
                         "mi_variable", DeclaredType.NUMBER, Optional.empty(), false, span);
@@ -104,7 +104,7 @@ class PrintScriptAnalyzerTest {
 
     @Test
     void skipsPrintlnRuleWhenDisabled() {
-        var rules = new AnalyzerRules(AnalyzerRules.IdentifierCase.CAMEL_CASE, false);
+        var rules = new AnalyzerRules(AnalyzerRules.IdentifierCase.CAMEL_CASE, true, false);
         var expression =
                 new BinaryExpression(
                         new NumberLiteral(BigDecimal.ONE, span),
@@ -114,6 +114,19 @@ class PrintScriptAnalyzerTest {
         var println = new PrintlnStatement(expression, span);
 
         var analyzer = analyzerFor(List.of(println), rules);
+        analyzer.next();
+
+        assertTrue(analyzer.diagnostics().isEmpty());
+    }
+
+    @Test
+    void skipsIdentifierCaseCheckWhenDisabled() {
+        var rules = new AnalyzerRules(AnalyzerRules.IdentifierCase.CAMEL_CASE, false, true);
+        var declaration =
+                new VariableDeclaration(
+                        "mal_nombrado", DeclaredType.NUMBER, Optional.empty(), false, span);
+
+        var analyzer = analyzerFor(List.of(declaration), rules);
         analyzer.next();
 
         assertTrue(analyzer.diagnostics().isEmpty());

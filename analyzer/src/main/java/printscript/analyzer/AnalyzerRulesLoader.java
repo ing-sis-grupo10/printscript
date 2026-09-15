@@ -22,6 +22,10 @@ public final class AnalyzerRulesLoader {
                 !json.has("println_identifier_or_literal_only")
                         || json.get("println_identifier_or_literal_only").getAsBoolean();
 
-        return new AnalyzerRules(identifierCase, printlnRestricted);
+        boolean identifierCaseEnabled =
+                !json.has("identifier_case_enabled")
+                        || json.get("identifier_case_enabled").getAsBoolean();
+
+        return new AnalyzerRules(identifierCase, identifierCaseEnabled, printlnRestricted);
     }
 }

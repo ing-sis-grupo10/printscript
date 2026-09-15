@@ -52,6 +52,7 @@ public final class PrintScriptAnalyzer implements Analyzer {
     }
 
     private void checkIdentifier(String name, Span span) {
+        if (!rules.identifierCaseEnabled()) return;
         Pattern expected =
                 rules.identifierCase() == AnalyzerRules.IdentifierCase.SNAKE_CASE
                         ? SNAKE_CASE
