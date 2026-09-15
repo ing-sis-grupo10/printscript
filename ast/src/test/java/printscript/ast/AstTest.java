@@ -47,6 +47,8 @@ class AstTest {
             case Identifier id -> "identifier:" + id.name();
             case BinaryExpression b -> "binary:" + b.operator();
             case BooleanLiteral b -> "boolean:" + b.value();
+            case ReadInputExpression r -> "readInput:" + describe(r.message());
+            case ReadEnvExpression r -> "readEnv:" + describe(r.name());
         };
     }
 
@@ -98,5 +100,16 @@ class AstTest {
     void switchOverExpressionCoversBoolean() {
         assertEquals("boolean:true", describe(new BooleanLiteral(true, span)));
         assertEquals("boolean:false", describe(new BooleanLiteral(false, span)));
+    }
+
+    @Test
+    void switchOverExpressionCoversReadInputAndReadEnv() {
+        var message = new StringLiteral("Ingresá tu nombre: ", span);
+        var name = new StringLiteral("HOME", span);
+
+        assertEquals(
+                "readInput:string:Ingresá tu nombre: ",
+                describe(new ReadInputExpression(message, span)));
+        assertEquals("readEnv:string:HOME", describe(new ReadEnvExpression(name, span)));
     }
 }

@@ -22,7 +22,9 @@ import printscript.interpreter.handler.PrintlnStatementHandler;
 import printscript.interpreter.handler.StatementHandler;
 import printscript.interpreter.handler.VariableDeclarationHandler;
 import printscript.interpreter.runtime.ExpressionEvaluator;
+import printscript.interpreter.runtime.FixedInputSource;
 import printscript.interpreter.runtime.GlobalEnvironment;
+import printscript.interpreter.runtime.InputSource;
 import printscript.lexer.PrintScriptLexer;
 import printscript.parser.AssignmentParser;
 import printscript.parser.IfStatementParser;
@@ -37,6 +39,10 @@ class PipelineIntegrationTest {
     private record RunResult(String output, boolean hadFailure) {}
 
     private RunResult run(String source) {
+        return run(source, prompt -> prompt);
+    }
+
+    private RunResult run(String source, InputSource inputSource) {
         var lexer = new PrintScriptLexer(new StringReader(source));
 
         List<StatementParser> statementParsers = new ArrayList<>();
@@ -50,7 +56,7 @@ class PipelineIntegrationTest {
                         lexer, statementParsers, new PrecedenceClimbingExpressionParser());
 
         var output = new ByteArrayOutputStream();
-        var evaluator = new ExpressionEvaluator();
+        var evaluator = new ExpressionEvaluator(inputSource);
         List<StatementHandler> statementHandlers = new ArrayList<>();
         HandlerRegistry registry = new HandlerRegistry(statementHandlers);
         statementHandlers.add(new VariableDeclarationHandler(evaluator));
@@ -315,5 +321,28 @@ class PipelineIntegrationTest {
 
         assertTrue(result.hadFailure());
         assertEquals("", result.output());
+    }
+
+    @Test
+    void readInputCoercesToDeclaredNumberType() {
+        String source =
+                """
+        let edad: number = readInput("Edad:");
+        println(edad + 1);
+        """;
+
+        RunResult result = run(source, new FixedInputSource(List.of("42")));
+
+        assertEquals("43", result.output());
+        assertFalse(result.hadFailure());
+    }
+
+    @Test
+    void readInputFailsWhenValueCannotBeCoercedToDeclaredType() {
+        String source = "let edad: number = readInput(\"Edad:\");";
+
+        RunResult result = run(source, new FixedInputSource(List.of("no es un numero")));
+
+        assertTrue(result.hadFailure());
     }
 }

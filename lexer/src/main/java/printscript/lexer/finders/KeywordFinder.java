@@ -11,17 +11,19 @@ import printscript.lexer.patterns.Pattern;
 public class KeywordFinder extends AbstractPatternFinder {
 
     private static final Map<String, TokenType> KEYWORDS =
-            Map.of(
-                    "let", TokenType.LET,
-                    "number", TokenType.NUMBER_TYPE,
-                    "string", TokenType.STRING_TYPE,
-                    "boolean", TokenType.BOOLEAN_TYPE,
-                    "println", TokenType.PRINTLN,
-                    "const", TokenType.CONST,
-                    "if", TokenType.IF,
-                    "else", TokenType.ELSE,
-                    "true", TokenType.TRUE,
-                    "false", TokenType.FALSE);
+            Map.ofEntries(
+                    Map.entry("let", TokenType.LET),
+                    Map.entry("number", TokenType.NUMBER_TYPE),
+                    Map.entry("string", TokenType.STRING_TYPE),
+                    Map.entry("boolean", TokenType.BOOLEAN_TYPE),
+                    Map.entry("println", TokenType.PRINTLN),
+                    Map.entry("const", TokenType.CONST),
+                    Map.entry("if", TokenType.IF),
+                    Map.entry("else", TokenType.ELSE),
+                    Map.entry("true", TokenType.TRUE),
+                    Map.entry("false", TokenType.FALSE),
+                    Map.entry("readInput", TokenType.READ_INPUT),
+                    Map.entry("readEnv", TokenType.READ_ENV));
 
     private final Pattern letterOrDigitPattern = new LetterOrDigitPattern();
 
