@@ -17,11 +17,11 @@ class GlobalEnvironmentTest {
     @Test
     void childCanDeclareSameNameAsParentWithoutConflict() {
         Environment parent = new GlobalEnvironment();
-        parent.declare("x", DeclaredType.NUMBER, span);
+        parent.declare("x", DeclaredType.NUMBER, false, span);
 
         Environment child = parent.child();
 
-        assertTrue(child.declare("x", DeclaredType.NUMBER, span).isEmpty());
+        assertTrue(child.declare("x", DeclaredType.NUMBER, false, span).isEmpty());
     }
 
     @Test
@@ -29,7 +29,7 @@ class GlobalEnvironmentTest {
         Environment parent = new GlobalEnvironment();
         Environment child = parent.child();
 
-        child.declare("mensaje", DeclaredType.STRING, span);
+        child.declare("mensaje", DeclaredType.STRING, false, span);
 
         assertTrue(parent.typeOf("mensaje").isEmpty());
     }
@@ -37,12 +37,20 @@ class GlobalEnvironmentTest {
     @Test
     void assignInChildPropagatesToVariableDeclaredInParent() {
         Environment parent = new GlobalEnvironment();
-        parent.declare("contador", DeclaredType.NUMBER, span);
+        parent.declare("contador", DeclaredType.NUMBER, false, span);
         parent.assign("contador", new NumberValue(BigDecimal.ZERO));
 
         Environment child = parent.child();
         child.assign("contador", new NumberValue(BigDecimal.ONE));
 
         assertEquals(Optional.of(new NumberValue(BigDecimal.ONE)), parent.valueOf("contador"));
+    }
+
+    @Test
+    void constantCannotBeReassigned() {
+        Environment env = new GlobalEnvironment();
+        env.declare("pi", DeclaredType.NUMBER, true, span);
+
+        assertTrue(env.isConstant("pi"));
     }
 }

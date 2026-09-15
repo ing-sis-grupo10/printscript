@@ -1,11 +1,6 @@
 package printscript.cli;
 
-import java.io.FileReader;
-import java.io.IOException;
-import java.io.OutputStream;
-import java.io.OutputStreamWriter;
-import java.io.PrintStream;
-import java.io.Reader;
+import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -28,9 +23,7 @@ import printscript.interpreter.handler.IfStatementHandler;
 import printscript.interpreter.handler.PrintlnStatementHandler;
 import printscript.interpreter.handler.StatementHandler;
 import printscript.interpreter.handler.VariableDeclarationHandler;
-import printscript.interpreter.runtime.Environment;
-import printscript.interpreter.runtime.ExpressionEvaluator;
-import printscript.interpreter.runtime.GlobalEnvironment;
+import printscript.interpreter.runtime.*;
 import printscript.lexer.PrintScriptLexer;
 import printscript.parser.AssignmentParser;
 import printscript.parser.IfStatementParser;
@@ -51,13 +44,16 @@ final class Pipeline {
 
     int validate() throws IOException {
         try (var source = new FileReader(sourceFile, StandardCharsets.UTF_8)) {
-            return report(drain(buildInterpreter(source, silentOutput())));
+            return report(drain(buildInterpreter(source, silentOutput(), nonInteractiveInput())));
         }
     }
 
     int execute() throws IOException {
         try (var source = new FileReader(sourceFile, StandardCharsets.UTF_8)) {
-            return report(drain(buildInterpreter(source, System.out)));
+            InputSource inputSource =
+                    new ConsoleInputSource(
+                            new InputStreamReader(System.in, StandardCharsets.UTF_8), System.out);
+            return report(drain(buildInterpreter(source, System.out, inputSource)));
         }
     }
 
@@ -74,7 +70,9 @@ final class Pipeline {
     int analyze() throws IOException {
         AnalyzerRules rules = loadAnalyzerRules();
         try (var source = new FileReader(sourceFile, StandardCharsets.UTF_8)) {
-            var analyzer = new PrintScriptAnalyzer(buildInterpreter(source, silentOutput()), rules);
+            var analyzer =
+                    new PrintScriptAnalyzer(
+                            buildInterpreter(source, silentOutput(), nonInteractiveInput()), rules);
             List<Diagnostic> diagnostics = new ArrayList<>(drain(analyzer));
             diagnostics.addAll(analyzer.diagnostics());
             return report(diagnostics);
@@ -99,7 +97,8 @@ final class Pipeline {
         }
     }
 
-    private PrintScriptInterpreter buildInterpreter(Reader source, PrintStream out) {
+    private PrintScriptInterpreter buildInterpreter(
+            Reader source, PrintStream out, InputSource inputSource) {
         var lexer = new PrintScriptLexer(source);
 
         List<StatementParser> statementParsers = new ArrayList<>();
@@ -112,7 +111,7 @@ final class Pipeline {
                 new PrintScriptParser(
                         lexer, statementParsers, new PrecedenceClimbingExpressionParser());
 
-        var evaluator = new ExpressionEvaluator();
+        var evaluator = new ExpressionEvaluator(inputSource);
         List<StatementHandler> statementHandlers = new ArrayList<>();
         HandlerRegistry handlers = new HandlerRegistry(statementHandlers);
         statementHandlers.add(new VariableDeclarationHandler(evaluator));
@@ -126,6 +125,10 @@ final class Pipeline {
 
     private PrintStream silentOutput() {
         return new PrintStream(OutputStream.nullOutputStream(), false, StandardCharsets.UTF_8);
+    }
+
+    private InputSource nonInteractiveInput() {
+        return prompt -> prompt;
     }
 
     private List<Diagnostic> drain(Iterator<Result<Statement>> statements) {

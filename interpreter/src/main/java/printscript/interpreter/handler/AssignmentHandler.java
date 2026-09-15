@@ -34,26 +34,31 @@ public final class AssignmentHandler implements StatementHandler {
                             "Variable no declarada: " + assignment.name(), assignment.span()));
         }
 
+        if (environment.isConstant(assignment.name())) {
+            return Result.failure(
+                    Diagnostic.error(
+                            "No se puede reasignar la constante: " + assignment.name(),
+                            assignment.span()));
+        }
+
         Result<RuntimeValue> value = evaluator.evaluate(assignment.value(), environment);
         if (value instanceof Failure<RuntimeValue> f) {
             return Result.failure(f.diagnostics());
         }
         RuntimeValue runtimeValue = ((Success<RuntimeValue>) value).value();
 
-        if (evaluator.typeOf(runtimeValue) != declaredType.get()) {
-            return Result.failure(
-                    Diagnostic.error(
-                            "No se puede asignar "
-                                    + evaluator.typeOf(runtimeValue)
-                                    + " a "
-                                    + assignment.name()
-                                    + " (declarada como "
-                                    + declaredType.get()
-                                    + ")",
-                            assignment.value().span()));
+        Result<RuntimeValue> coerced =
+                evaluator.coerceForAssignment(
+                        assignment.value(),
+                        runtimeValue,
+                        declaredType.get(),
+                        assignment.value().span());
+        if (coerced instanceof Failure<RuntimeValue> f) {
+            return Result.failure(f.diagnostics());
         }
+        RuntimeValue coercedValue = ((Success<RuntimeValue>) coerced).value();
 
-        environment.assign(assignment.name(), runtimeValue);
+        environment.assign(assignment.name(), coercedValue);
         return Result.success(statement);
     }
 }
