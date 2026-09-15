@@ -43,11 +43,36 @@ public final class PrintScriptAnalyzer implements Analyzer {
 
     private void check(Statement statement) {
         switch (statement) {
-            case VariableDeclaration declaration ->
-                    checkIdentifier(declaration.name(), declaration.span());
-            case PrintlnStatement println -> checkPrintlnArgument(println.argument());
-            case Assignment assignment -> {}
+            case VariableDeclaration declaration -> {
+                checkIdentifier(declaration.name(), declaration.span());
+                declaration.initializer().ifPresent(this::checkReadInputIfPresent);
+            }
+            case PrintlnStatement println -> {
+                checkPrintlnArgument(println.argument());
+                checkReadInputIfPresent(println.argument());
+            }
+            case Assignment assignment -> checkReadInputIfPresent(assignment.value());
             case IfStatement ifStatement -> {}
+        }
+    }
+
+    private void checkReadInputIfPresent(Expression expression) {
+        if (expression instanceof ReadInputExpression readInput) {
+            checkReadInputArgument(readInput.message());
+        }
+    }
+
+    private void checkReadInputArgument(Expression argument) {
+        if (!rules.readInputOnlyIdentifierOrLiteral()) return;
+        boolean valid =
+                argument instanceof Identifier
+                        || argument instanceof NumberLiteral
+                        || argument instanceof StringLiteral;
+        if (!valid) {
+            collected.add(
+                    Diagnostic.warning(
+                            "readInput solo puede recibir un identificador o un literal, no una expresión",
+                            argument.span()));
         }
     }
 
@@ -70,7 +95,9 @@ public final class PrintScriptAnalyzer implements Analyzer {
         boolean valid =
                 argument instanceof Identifier
                         || argument instanceof NumberLiteral
-                        || argument instanceof StringLiteral;
+                        || argument instanceof StringLiteral
+                        || argument instanceof ReadInputExpression;
+
         if (!valid) {
             collected.add(
                     Diagnostic.warning(

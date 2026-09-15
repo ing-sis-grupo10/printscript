@@ -9,16 +9,7 @@ import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.Test;
-import printscript.ast.Assignment;
-import printscript.ast.BinaryExpression;
-import printscript.ast.BinaryOperator;
-import printscript.ast.DeclaredType;
-import printscript.ast.Identifier;
-import printscript.ast.IfStatement;
-import printscript.ast.NumberLiteral;
-import printscript.ast.PrintlnStatement;
-import printscript.ast.Statement;
-import printscript.ast.VariableDeclaration;
+import printscript.ast.*;
 import printscript.common.result.Diagnostic;
 import printscript.common.result.Result;
 import printscript.common.result.Success;
@@ -64,7 +55,7 @@ class PrintScriptAnalyzerTest {
 
     @Test
     void acceptsSnakeCaseIdentifierWhenConfigured() {
-        var rules = new AnalyzerRules(AnalyzerRules.IdentifierCase.SNAKE_CASE, true, true);
+        var rules = new AnalyzerRules(AnalyzerRules.IdentifierCase.SNAKE_CASE, true, true, true);
         var declaration =
                 new VariableDeclaration(
                         "mi_variable", DeclaredType.NUMBER, Optional.empty(), false, span);
@@ -104,7 +95,7 @@ class PrintScriptAnalyzerTest {
 
     @Test
     void skipsPrintlnRuleWhenDisabled() {
-        var rules = new AnalyzerRules(AnalyzerRules.IdentifierCase.CAMEL_CASE, true, false);
+        var rules = new AnalyzerRules(AnalyzerRules.IdentifierCase.CAMEL_CASE, true, false, true);
         var expression =
                 new BinaryExpression(
                         new NumberLiteral(BigDecimal.ONE, span),
@@ -121,7 +112,7 @@ class PrintScriptAnalyzerTest {
 
     @Test
     void skipsIdentifierCaseCheckWhenDisabled() {
-        var rules = new AnalyzerRules(AnalyzerRules.IdentifierCase.CAMEL_CASE, false, true);
+        var rules = new AnalyzerRules(AnalyzerRules.IdentifierCase.CAMEL_CASE, false, true, true);
         var declaration =
                 new VariableDeclaration(
                         "mal_nombrado", DeclaredType.NUMBER, Optional.empty(), false, span);
@@ -166,6 +157,92 @@ class PrintScriptAnalyzerTest {
         var result = analyzer.next();
 
         assertSame(upstreamFailure, result);
+        assertTrue(analyzer.diagnostics().isEmpty());
+    }
+
+    @Test
+    void acceptsReadInputWithIdentifierArgumentAsInitializer() {
+        var readInput = new ReadInputExpression(new Identifier("mensaje", span), span);
+        var declaration =
+                new VariableDeclaration(
+                        "x", DeclaredType.STRING, Optional.of(readInput), false, span);
+
+        var analyzer = analyzerFor(List.of(declaration), AnalyzerRules.defaults());
+        analyzer.next();
+
+        assertTrue(analyzer.diagnostics().isEmpty());
+    }
+
+    @Test
+    void reportsReadInputWithExpressionArgumentAsInitializer() {
+        var expression =
+                new BinaryExpression(
+                        new NumberLiteral(BigDecimal.ONE, span),
+                        BinaryOperator.PLUS,
+                        new NumberLiteral(BigDecimal.TWO, span),
+                        span);
+        var readInput = new ReadInputExpression(expression, span);
+        var declaration =
+                new VariableDeclaration(
+                        "x", DeclaredType.STRING, Optional.of(readInput), false, span);
+
+        var analyzer = analyzerFor(List.of(declaration), AnalyzerRules.defaults());
+        analyzer.next();
+
+        assertEquals(1, analyzer.diagnostics().size());
+    }
+
+    @Test
+    void reportsReadInputWithExpressionArgumentInAssignment() {
+        var expression =
+                new BinaryExpression(
+                        new NumberLiteral(BigDecimal.ONE, span),
+                        BinaryOperator.PLUS,
+                        new NumberLiteral(BigDecimal.TWO, span),
+                        span);
+        var readInput = new ReadInputExpression(expression, span);
+        var assignment = new Assignment("x", readInput, span);
+
+        var analyzer = analyzerFor(List.of(assignment), AnalyzerRules.defaults());
+        analyzer.next();
+
+        assertEquals(1, analyzer.diagnostics().size());
+    }
+
+    @Test
+    void reportsReadInputWithExpressionArgumentAsPrintlnArgument() {
+        var expression =
+                new BinaryExpression(
+                        new NumberLiteral(BigDecimal.ONE, span),
+                        BinaryOperator.PLUS,
+                        new NumberLiteral(BigDecimal.TWO, span),
+                        span);
+        var readInput = new ReadInputExpression(expression, span);
+        var println = new PrintlnStatement(readInput, span);
+
+        var analyzer = analyzerFor(List.of(println), AnalyzerRules.defaults());
+        analyzer.next();
+
+        assertEquals(1, analyzer.diagnostics().size());
+    }
+
+    @Test
+    void skipsReadInputRuleWhenDisabled() {
+        var rules = new AnalyzerRules(AnalyzerRules.IdentifierCase.CAMEL_CASE, true, true, false);
+        var expression =
+                new BinaryExpression(
+                        new NumberLiteral(BigDecimal.ONE, span),
+                        BinaryOperator.PLUS,
+                        new NumberLiteral(BigDecimal.TWO, span),
+                        span);
+        var readInput = new ReadInputExpression(expression, span);
+        var declaration =
+                new VariableDeclaration(
+                        "x", DeclaredType.STRING, Optional.of(readInput), false, span);
+
+        var analyzer = analyzerFor(List.of(declaration), rules);
+        analyzer.next();
+
         assertTrue(analyzer.diagnostics().isEmpty());
     }
 }
