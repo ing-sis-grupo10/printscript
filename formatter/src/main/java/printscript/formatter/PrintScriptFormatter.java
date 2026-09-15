@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.io.Reader;
 import java.io.UncheckedIOException;
 import java.io.Writer;
+import java.util.Optional;
 import printscript.common.result.Diagnostic;
 import printscript.common.result.Failure;
 import printscript.common.result.Result;
@@ -15,6 +16,8 @@ import printscript.lexer.PrintScriptLexer;
 public final class PrintScriptFormatter implements Formatter {
     private final FormattingRules rules;
     private int depth;
+    private boolean sawPrintlnInCurrentStatement;
+    private boolean previousStatementWasPrintln;
 
     public PrintScriptFormatter(FormattingRules rules) {
         this.rules = rules;
@@ -24,11 +27,14 @@ public final class PrintScriptFormatter implements Formatter {
     public void format(Reader source, Writer out, String version) {
         try {
             depth = 0;
+            sawPrintlnInCurrentStatement = false;
+            previousStatementWasPrintln = false;
             PrintScriptLexer lexer = new PrintScriptLexer(source, version);
             Token previous = null;
 
             while (lexer.hasNext()) {
                 Token current = nextToken(lexer);
+                String currentGap = lexer.lastGap();
                 if (current.type() == TokenType.EOF) {
                     break;
                 }
@@ -38,12 +44,19 @@ public final class PrintScriptFormatter implements Formatter {
                 }
 
                 if (previous != null) {
-                    out.write(separator(previous, current));
+                    out.write(separator(previous, current, currentGap));
                 }
                 out.write(render(current));
 
                 if (current.type() == TokenType.LEFT_BRACE) {
                     depth++;
+                }
+                if (current.type() == TokenType.PRINTLN) {
+                    sawPrintlnInCurrentStatement = true;
+                }
+                if (current.type() == TokenType.SEMICOLON) {
+                    previousStatementWasPrintln = sawPrintlnInCurrentStatement;
+                    sawPrintlnInCurrentStatement = false;
                 }
 
                 previous = current;
@@ -72,7 +85,7 @@ public final class PrintScriptFormatter implements Formatter {
         return token.value();
     }
 
-    private String separator(Token previous, Token current) {
+    private String separator(Token previous, Token current, String originalGap) {
         if (current.type() == TokenType.LEFT_BRACE) {
             return rules.ifBraceSameLine() ? " " : "\n" + indent();
         }
@@ -85,11 +98,9 @@ public final class PrintScriptFormatter implements Formatter {
         if (previous.type() == TokenType.RIGHT_BRACE) {
             return current.type() == TokenType.ELSE ? " " : "\n" + indent();
         }
-        if (current.type() == TokenType.PRINTLN) {
-            return "\n".repeat(1 + rules.blankLinesBeforePrintln());
-        }
         if (previous.type() == TokenType.SEMICOLON) {
-            return "\n" + indent();
+            int blankLines = previousStatementWasPrintln ? rules.blankLinesAfterPrintln() : 0;
+            return "\n".repeat(1 + blankLines) + indent();
         }
         if (current.type() == TokenType.SEMICOLON) {
             return "";
@@ -101,23 +112,33 @@ public final class PrintScriptFormatter implements Formatter {
             return " ";
         }
         if (current.type() == TokenType.COLON) {
-            return rules.spaceBeforeColon() ? " " : "";
+            return resolve(rules.spaceBeforeColon(), originalGap);
         }
         if (previous.type() == TokenType.COLON) {
-            return rules.spaceAfterColon() ? " " : "";
+            return resolve(rules.spaceAfterColon(), originalGap);
         }
         if (current.type() == TokenType.ASSIGN) {
-            return rules.spaceBeforeAssign() ? " " : "";
+            return resolve(rules.spaceBeforeAssign(), originalGap);
         }
         if (previous.type() == TokenType.ASSIGN) {
-            return rules.spaceAfterAssign() ? " " : "";
+            return resolve(rules.spaceAfterAssign(), originalGap);
         }
         if (current.type() == TokenType.LEFT_PAREN
                 || previous.type() == TokenType.LEFT_PAREN
                 || current.type() == TokenType.RIGHT_PAREN) {
-            return "";
+            return rules.singleSpaceSeparation() ? " " : originalGap;
         }
         return " ";
+    }
+
+    private String resolve(Optional<Boolean> configured, String originalGap) {
+        if (configured.isPresent()) {
+            return configured.get() ? " " : "";
+        }
+        if (rules.singleSpaceSeparation()) {
+            return " ";
+        }
+        return originalGap;
     }
 
     private String indent() {

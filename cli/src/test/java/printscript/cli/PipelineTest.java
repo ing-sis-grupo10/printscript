@@ -88,10 +88,25 @@ class PipelineTest {
     }
 
     @Test
-    void formattingRewritesSourceAccordingToDefaultRules() throws IOException {
+    void formattingWithoutConfigPreservesOriginalSpacingAroundColonAndEquals() throws IOException {
         String path = writeSource("let  x:number=5;");
 
         int exitCode = new Pipeline(path, null).format();
+
+        assertEquals(0, exitCode);
+        assertTrue(out.toString(StandardCharsets.UTF_8).contains("let x:number=5;"));
+    }
+
+    @Test
+    void formattingWithConfigEnforcesSpacingAroundColonAndEquals() throws IOException {
+        String path = writeSource("let  x:number=5;");
+        Path config = tempDir.resolve("formatter.json");
+        Files.writeString(
+                config,
+                "{\"declaration_space_before_colon\": true, \"declaration_space_after_colon\": true,"
+                        + " \"assignment_space_before_equals\": true, \"assignment_space_after_equals\": true}");
+
+        int exitCode = new Pipeline(path, config.toString()).format();
 
         assertEquals(0, exitCode);
         assertTrue(out.toString(StandardCharsets.UTF_8).contains("let x : number = 5;"));
