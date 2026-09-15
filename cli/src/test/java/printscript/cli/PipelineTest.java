@@ -119,4 +119,36 @@ class PipelineTest {
         assertFalse(err.toString(StandardCharsets.UTF_8).contains("WARNING"));
         assertFalse(err.toString(StandardCharsets.UTF_8).contains("ERROR"));
     }
+
+    @Test
+    void rejectsOneDotOneSyntaxWhenVersionIsExplicitlyOneDotZero() throws IOException {
+        String path =
+                writeSource(
+                        """
+    let flag: boolean = true;
+    if (flag) {
+        println(flag);
+    }
+    """);
+
+        int exitCode = new Pipeline(path, null, "1.0").validate();
+
+        assertEquals(1, exitCode);
+    }
+
+    @Test
+    void acceptsOneDotOneSyntaxByDefault() throws IOException {
+        String path =
+                writeSource(
+                        """
+    let flag: boolean = true;
+    if (flag) {
+        println("dentro");
+    }
+    """);
+
+        int exitCode = new Pipeline(path, null).validate();
+
+        assertEquals(0, exitCode);
+    }
 }

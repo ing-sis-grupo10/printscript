@@ -21,10 +21,10 @@ public final class PrintScriptFormatter implements Formatter {
     }
 
     @Override
-    public void format(Reader source, Writer out) {
+    public void format(Reader source, Writer out, String version) {
         try {
             depth = 0;
-            PrintScriptLexer lexer = new PrintScriptLexer(source);
+            PrintScriptLexer lexer = new PrintScriptLexer(source, version);
             Token previous = null;
 
             while (lexer.hasNext()) {

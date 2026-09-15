@@ -36,10 +36,16 @@ import printscript.parser.VariableDeclarationParser;
 final class Pipeline {
     private final String sourceFile;
     private final String configFile;
+    private final String version;
 
     Pipeline(String sourceFile, String configFile) {
+        this(sourceFile, configFile, "1.1");
+    }
+
+    Pipeline(String sourceFile, String configFile, String version) {
         this.sourceFile = sourceFile;
         this.configFile = configFile;
+        this.version = version;
     }
 
     int validate() throws IOException {
@@ -61,7 +67,7 @@ final class Pipeline {
         FormattingRules rules = loadFormattingRules();
         try (var source = new FileReader(sourceFile, StandardCharsets.UTF_8)) {
             var writer = new OutputStreamWriter(System.out, StandardCharsets.UTF_8);
-            new PrintScriptFormatter(rules).format(source, writer);
+            new PrintScriptFormatter(rules).format(source, writer, version);
             writer.flush();
         }
         return 0;
@@ -99,7 +105,7 @@ final class Pipeline {
 
     private PrintScriptInterpreter buildInterpreter(
             Reader source, PrintStream out, InputSource inputSource) {
-        var lexer = new PrintScriptLexer(source);
+        var lexer = new PrintScriptLexer(source, version);
 
         List<StatementParser> statementParsers = new ArrayList<>();
         statementParsers.add(new VariableDeclarationParser());
