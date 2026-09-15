@@ -1,0 +1,14 @@
+let nombre: string = "Tomas";
+let edad: number = 21;
+let activo: boolean = true;
+const materia: string = "PrintScript";
+
+if (activo) {
+    println("Hola " + nombre + ", tenes " + edad + " anios.");
+    println("Cursando: " + materia);
+} else {
+    println("inactivo");
+}
+
+let mensaje: string = readInput("Escribi algo: ");
+println("Dijiste: " + mensaje);

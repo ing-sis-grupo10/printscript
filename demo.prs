@@ -1,0 +1,8 @@
+let nombre: string = "Tomas";
+const club: string = readEnv("BEST_FOOTBALL_CLUB");
+let edad: number = 21;
+println("Hola " + nombre);
+println(club);
+if (edad) {
+    println("con if");
+}

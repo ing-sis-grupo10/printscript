@@ -1,0 +1,4 @@
+const activo: boolean = true;
+if (activo) {
+    println("Funciona en 1.1");
+}

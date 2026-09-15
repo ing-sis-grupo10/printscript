@@ -1,0 +1,8 @@
+{
+  "declaration_space_before_colon": true,
+  "declaration_space_after_colon": true,
+  "assignment_space_before_equals": true,
+  "assignment_space_after_equals": true,
+  "if_brace_same_line": true,
+  "if_indent_size": 2
+}

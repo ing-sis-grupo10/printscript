@@ -1,0 +1,11 @@
+let numero: number = "esto no es un numero";
+const pi: number = 3;
+pi = 4;
+let x: number = 10;
+let y: number = 0;
+println(x / y);
+let bandera: number = 5;
+if (bandera) {
+    println("nunca llega aca");
+}
+println(nombreQueNoExiste);

@@ -1,0 +1,6 @@
+let   x:number=5;
+let outro :  string="hola";
+println(   x   );
+if(outro){
+println("adentro");
+}

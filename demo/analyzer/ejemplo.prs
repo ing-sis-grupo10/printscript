@@ -1,0 +1,4 @@
+let miVariable: number = 1;
+let nombre: string = "Ana";
+println(miVariable + 2);
+let saludo: string = readInput(nombre);
