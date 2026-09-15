@@ -25,13 +25,7 @@ import printscript.lexer.finders.SymbolFinder;
 public class PrintScriptLexer implements Iterator<Result<Token>> {
 
     private final BufferedReader reader;
-    private final List<Finder> finders =
-            List.of(
-                    new KeywordFinder(),
-                    new IdentifierFinder(),
-                    new NumberFinder(),
-                    new StringFinder(),
-                    new SymbolFinder());
+    private final List<Finder> finders;
 
     private String currentLine;
     private int currentIndex;
@@ -40,7 +34,18 @@ public class PrintScriptLexer implements Iterator<Result<Token>> {
     private Result<Token> nextResult;
 
     public PrintScriptLexer(Reader reader) {
+        this(reader, "1.1");
+    }
+
+    public PrintScriptLexer(Reader reader, String version) {
         this.reader = new BufferedReader(reader);
+        this.finders =
+                List.of(
+                        new KeywordFinder(version),
+                        new IdentifierFinder(),
+                        new NumberFinder(),
+                        new StringFinder(),
+                        new SymbolFinder());
         this.currentRow = 0;
         this.eofEmitted = false;
         advanceLine();

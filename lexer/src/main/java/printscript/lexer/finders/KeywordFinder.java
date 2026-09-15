@@ -1,5 +1,6 @@
 package printscript.lexer.finders;
 
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 import printscript.common.result.Result;
@@ -10,13 +11,16 @@ import printscript.lexer.patterns.Pattern;
 
 public class KeywordFinder extends AbstractPatternFinder {
 
-    private static final Map<String, TokenType> KEYWORDS =
+    private static final Map<String, TokenType> BASE_KEYWORDS =
+            Map.of(
+                    "let", TokenType.LET,
+                    "number", TokenType.NUMBER_TYPE,
+                    "string", TokenType.STRING_TYPE,
+                    "println", TokenType.PRINTLN);
+
+    private static final Map<String, TokenType> V1_1_KEYWORDS =
             Map.ofEntries(
-                    Map.entry("let", TokenType.LET),
-                    Map.entry("number", TokenType.NUMBER_TYPE),
-                    Map.entry("string", TokenType.STRING_TYPE),
                     Map.entry("boolean", TokenType.BOOLEAN_TYPE),
-                    Map.entry("println", TokenType.PRINTLN),
                     Map.entry("const", TokenType.CONST),
                     Map.entry("if", TokenType.IF),
                     Map.entry("else", TokenType.ELSE),
@@ -25,7 +29,20 @@ public class KeywordFinder extends AbstractPatternFinder {
                     Map.entry("readInput", TokenType.READ_INPUT),
                     Map.entry("readEnv", TokenType.READ_ENV));
 
+    private final Map<String, TokenType> keywords;
     private final Pattern letterOrDigitPattern = new LetterOrDigitPattern();
+
+    public KeywordFinder() {
+        this("1.1");
+    }
+
+    public KeywordFinder(String version) {
+        Map<String, TokenType> enabled = new HashMap<>(BASE_KEYWORDS);
+        if ("1.1".equals(version)) {
+            enabled.putAll(V1_1_KEYWORDS);
+        }
+        this.keywords = Map.copyOf(enabled);
+    }
 
     @Override
     public boolean canHandle(char currentChar) {
@@ -35,7 +52,7 @@ public class KeywordFinder extends AbstractPatternFinder {
     @Override
     public Optional<Result<Token>> find(String input, int startIndex, int row, int column) {
         Scan scan = consumeWhile(input, startIndex, row, column, letterOrDigitPattern);
-        TokenType type = KEYWORDS.get(scan.value());
+        TokenType type = keywords.get(scan.value());
         if (type == null) {
             return Optional.empty();
         }

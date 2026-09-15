@@ -7,14 +7,14 @@ public final class Main {
     public static void main(String[] args) {
         if (args.length < 2) {
             System.err.println(
-                    "Uso: printscript <Validation|Execution|Formatting|Analyzing> <archivo> [--config <archivo>] [--version 1.0]");
+                    "Uso: printscript <Validation|Execution|Formatting|Analyzing> <archivo> [--config <archivo>] [--version 1.0|1.1]");
             System.exit(2);
         }
 
         String operation = args[0];
         String sourceFile = args[1];
         String configFile = null;
-        String version = "1.0";
+        String version = "1.1";
 
         for (int i = 2; i < args.length; i++) {
             switch (args[i]) {
@@ -28,12 +28,12 @@ public final class Main {
             }
         }
 
-        if (!"1.0".equals(version)) {
+        if (!"1.0".equals(version) && !"1.1".equals(version)) {
             System.err.println("Versión no soportada: " + version);
             System.exit(1);
         }
 
-        Pipeline pipeline = new Pipeline(sourceFile, configFile);
+        Pipeline pipeline = new Pipeline(sourceFile, configFile, version);
         int exitCode;
         try {
             exitCode =
