@@ -20,7 +20,7 @@ class FormattingRulesLoaderTest {
               "declaration_space_after_colon": true,
               "assignment_space_before_equals": true,
               "assignment_space_after_equals": false,
-              "println_new_lines_before_call": 2
+              "println_new_lines_after_call": 2
             }
             """;
 
@@ -30,7 +30,7 @@ class FormattingRulesLoaderTest {
         assertEquals(Optional.of(true), rules.spaceAfterColon());
         assertEquals(Optional.of(true), rules.spaceBeforeAssign());
         assertEquals(Optional.of(false), rules.spaceAfterAssign());
-        assertEquals(2, rules.blankLinesBeforePrintln());
+        assertEquals(2, rules.blankLinesAfterPrintln());
     }
 
     @Test
@@ -43,9 +43,9 @@ class FormattingRulesLoaderTest {
     @Test
     void loaderClampsBlankLinesToMaxTwo() {
         FormattingRules rules =
-                loader.load(new StringReader("{\"println_new_lines_before_call\": 5}"));
+                loader.load(new StringReader("{\"println_new_lines_after_call\": 5}"));
 
-        assertEquals(2, rules.blankLinesBeforePrintln());
+        assertEquals(2, rules.blankLinesAfterPrintln());
     }
 
     @Test

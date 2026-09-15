@@ -8,7 +8,7 @@ public record FormattingRules(
         Optional<Boolean> spaceBeforeAssign,
         Optional<Boolean> spaceAfterAssign,
         boolean singleSpaceSeparation,
-        int blankLinesBeforePrintln,
+        int blankLinesAfterPrintln,
         boolean ifBraceSameLine,
         int indentSizeInsideIf) {
     public static FormattingRules defaults() {

@@ -16,6 +16,8 @@ import printscript.lexer.PrintScriptLexer;
 public final class PrintScriptFormatter implements Formatter {
     private final FormattingRules rules;
     private int depth;
+    private boolean sawPrintlnInCurrentStatement;
+    private boolean previousStatementWasPrintln;
 
     public PrintScriptFormatter(FormattingRules rules) {
         this.rules = rules;
@@ -25,6 +27,8 @@ public final class PrintScriptFormatter implements Formatter {
     public void format(Reader source, Writer out, String version) {
         try {
             depth = 0;
+            sawPrintlnInCurrentStatement = false;
+            previousStatementWasPrintln = false;
             PrintScriptLexer lexer = new PrintScriptLexer(source, version);
             Token previous = null;
 
@@ -46,6 +50,13 @@ public final class PrintScriptFormatter implements Formatter {
 
                 if (current.type() == TokenType.LEFT_BRACE) {
                     depth++;
+                }
+                if (current.type() == TokenType.PRINTLN) {
+                    sawPrintlnInCurrentStatement = true;
+                }
+                if (current.type() == TokenType.SEMICOLON) {
+                    previousStatementWasPrintln = sawPrintlnInCurrentStatement;
+                    sawPrintlnInCurrentStatement = false;
                 }
 
                 previous = current;
@@ -87,11 +98,9 @@ public final class PrintScriptFormatter implements Formatter {
         if (previous.type() == TokenType.RIGHT_BRACE) {
             return current.type() == TokenType.ELSE ? " " : "\n" + indent();
         }
-        if (current.type() == TokenType.PRINTLN) {
-            return "\n".repeat(1 + rules.blankLinesBeforePrintln());
-        }
         if (previous.type() == TokenType.SEMICOLON) {
-            return "\n" + indent();
+            int blankLines = previousStatementWasPrintln ? rules.blankLinesAfterPrintln() : 0;
+            return "\n".repeat(1 + blankLines) + indent();
         }
         if (current.type() == TokenType.SEMICOLON) {
             return "";

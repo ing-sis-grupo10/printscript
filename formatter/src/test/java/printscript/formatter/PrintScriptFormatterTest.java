@@ -93,8 +93,8 @@ class PrintScriptFormatterTest {
     }
 
     @Test
-    void printlnWithZeroBlankLinesBefore() {
-        String source = "let a: string;\nprintln(a);";
+    void noBlankLinesAfterPrintlnWhenConfiguredToZero() {
+        String source = "println(a);\nprintln(b);";
         var rules =
                 new FormattingRules(
                         Optional.of(true),
@@ -108,12 +108,12 @@ class PrintScriptFormatterTest {
 
         String result = format(source, rules);
 
-        assertEquals("let a : string;\nprintln(a);", result);
+        assertEquals("println(a);\nprintln(b);", result);
     }
 
     @Test
-    void printlnWithTwoBlankLinesBefore() {
-        String source = "let a: string;\nprintln(a);";
+    void twoBlankLinesAfterPrintlnWhenConfiguredToTwo() {
+        String source = "println(a);\nprintln(b);";
         var rules =
                 new FormattingRules(
                         Optional.of(true),
@@ -127,7 +127,26 @@ class PrintScriptFormatterTest {
 
         String result = format(source, rules);
 
-        assertEquals("let a : string;\n\n\nprintln(a);", result);
+        assertEquals("println(a);\n\n\nprintln(b);", result);
+    }
+
+    @Test
+    void blankLinesAfterPrintlnDoNotApplyWhenPrecedingStatementIsNotPrintln() {
+        String source = "let a: string = \"hi\";\nprintln(a);";
+        var rules =
+                new FormattingRules(
+                        Optional.of(true),
+                        Optional.of(true),
+                        Optional.of(true),
+                        Optional.of(true),
+                        false,
+                        2,
+                        true,
+                        2);
+
+        String result = format(source, rules);
+
+        assertEquals("let a : string = \"hi\";\nprintln(a);", result);
     }
 
     @Test

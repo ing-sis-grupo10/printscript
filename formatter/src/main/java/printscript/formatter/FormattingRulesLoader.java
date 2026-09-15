@@ -19,7 +19,7 @@ public final class FormattingRulesLoader {
         Optional<Boolean> spaceAfterAssign =
                 getOptionalBoolean(json, "assignment_space_after_equals");
         boolean singleSpaceSeparation = getBoolean(json, "single_space_separation", false);
-        int blankLinesBeforePrintln = getInt(json, "println_new_lines_before_call", 1);
+        int blankLinesAfterPrintln = getInt(json, "println_new_lines_after_call", 1);
         boolean ifBraceSameLine = getBoolean(json, "if_brace_same_line", true);
         int indentSizeInsideIf = getInt(json, "if_indent_size", 2);
 
@@ -29,7 +29,7 @@ public final class FormattingRulesLoader {
                 spaceBeforeAssign,
                 spaceAfterAssign,
                 singleSpaceSeparation,
-                Math.min(blankLinesBeforePrintln, 2),
+                Math.min(blankLinesAfterPrintln, 2),
                 ifBraceSameLine,
                 indentSizeInsideIf);
     }
