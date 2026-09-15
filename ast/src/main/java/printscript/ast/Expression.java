@@ -1,4 +1,10 @@
 package printscript.ast;
 
 public sealed interface Expression extends AstNode
-        permits NumberLiteral, StringLiteral, Identifier, BinaryExpression, BooleanLiteral {}
+        permits NumberLiteral,
+                StringLiteral,
+                Identifier,
+                BinaryExpression,
+                BooleanLiteral,
+                ReadInputExpression,
+                ReadEnvExpression {}

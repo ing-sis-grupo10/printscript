@@ -7,6 +7,8 @@ import printscript.ast.BooleanLiteral;
 import printscript.ast.Expression;
 import printscript.ast.Identifier;
 import printscript.ast.NumberLiteral;
+import printscript.ast.ReadEnvExpression;
+import printscript.ast.ReadInputExpression;
 import printscript.ast.StringLiteral;
 import printscript.common.token.Span;
 import printscript.common.token.Token;
@@ -54,6 +56,8 @@ public final class PrecedenceClimbingExpressionParser implements ExpressionParse
             case MINUS -> parseNegativeNumber(tokens, token);
             case TRUE -> new BooleanLiteral(true, token.span());
             case FALSE -> new BooleanLiteral(false, token.span());
+            case READ_INPUT -> parseReadInput(tokens, token);
+            case READ_ENV -> parseReadEnv(tokens, token);
             default ->
                     throw new ParseError(
                             "Se esperaba un número, string o identificador", token.span());
@@ -64,6 +68,20 @@ public final class PrecedenceClimbingExpressionParser implements ExpressionParse
         Token number = tokens.expect(TokenType.NUMBER_LITERAL);
         BigDecimal value = new BigDecimal(number.value()).negate();
         return new NumberLiteral(value, Span.merge(minusToken.span(), number.span()));
+    }
+
+    private Expression parseReadInput(TokenStream tokens, Token keyword) {
+        tokens.expect(TokenType.LEFT_PAREN);
+        Expression message = parseExpression(tokens);
+        Token closingParen = tokens.expect(TokenType.RIGHT_PAREN);
+        return new ReadInputExpression(message, Span.merge(keyword.span(), closingParen.span()));
+    }
+
+    private Expression parseReadEnv(TokenStream tokens, Token keyword) {
+        tokens.expect(TokenType.LEFT_PAREN);
+        Expression name = parseExpression(tokens);
+        Token closingParen = tokens.expect(TokenType.RIGHT_PAREN);
+        return new ReadEnvExpression(name, Span.merge(keyword.span(), closingParen.span()));
     }
 
     private boolean isAdditive(TokenType type) {
