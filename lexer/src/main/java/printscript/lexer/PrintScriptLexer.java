@@ -26,12 +26,14 @@ public class PrintScriptLexer implements Iterator<Result<Token>> {
 
     private final BufferedReader reader;
     private final List<Finder> finders;
+    private final StringBuilder pendingGap = new StringBuilder();
 
     private String currentLine;
     private int currentIndex;
     private int currentRow;
     private boolean eofEmitted;
     private Result<Token> nextResult;
+    private String lastGap = "";
 
     public PrintScriptLexer(Reader reader) {
         this(reader, "1.1");
@@ -76,7 +78,18 @@ public class PrintScriptLexer implements Iterator<Result<Token>> {
         }
         Result<Token> result = nextResult;
         nextResult = null;
+        lastGap = pendingGap.toString();
+        pendingGap.setLength(0);
         return result;
+    }
+
+    /**
+     * El texto crudo que había en el fuente original inmediatamente antes del último token devuelto
+     * por next() — lo usa el formatter para no tocar el espaciado donde no hay ninguna regla
+     * configurada.
+     */
+    public String lastGap() {
+        return lastGap;
     }
 
     private Result<Token> findNextResult() {
@@ -86,6 +99,7 @@ public class PrintScriptLexer implements Iterator<Result<Token>> {
             if (currentIndex >= currentLine.length()) {
                 currentRow++;
                 advanceLine();
+                pendingGap.append('\n');
                 continue;
             }
 
@@ -133,6 +147,7 @@ public class PrintScriptLexer implements Iterator<Result<Token>> {
     private void skipWhitespace() {
         while (currentIndex < currentLine.length()
                 && Character.isWhitespace(currentLine.charAt(currentIndex))) {
+            pendingGap.append(currentLine.charAt(currentIndex));
             currentIndex++;
         }
     }

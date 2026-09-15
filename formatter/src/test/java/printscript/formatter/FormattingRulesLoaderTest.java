@@ -1,10 +1,10 @@
 package printscript.formatter;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.StringReader;
+import java.util.Optional;
 import org.junit.jupiter.api.Test;
 
 class FormattingRulesLoaderTest {
@@ -15,21 +15,21 @@ class FormattingRulesLoaderTest {
     void loadsRulesFromJson() {
         String json =
                 """
-                {
-                  "declaration_space_before_colon": false,
-                  "declaration_space_after_colon": true,
-                  "assignment_space_before_equals": true,
-                  "assignment_space_after_equals": false,
-                  "println_new_lines_before_call": 2
-                }
-                """;
+            {
+              "declaration_space_before_colon": false,
+              "declaration_space_after_colon": true,
+              "assignment_space_before_equals": true,
+              "assignment_space_after_equals": false,
+              "println_new_lines_before_call": 2
+            }
+            """;
 
         FormattingRules rules = loader.load(new StringReader(json));
 
-        assertFalse(rules.spaceBeforeColon());
-        assertTrue(rules.spaceAfterColon());
-        assertTrue(rules.spaceBeforeAssign());
-        assertFalse(rules.spaceAfterAssign());
+        assertEquals(Optional.of(false), rules.spaceBeforeColon());
+        assertEquals(Optional.of(true), rules.spaceAfterColon());
+        assertEquals(Optional.of(true), rules.spaceBeforeAssign());
+        assertEquals(Optional.of(false), rules.spaceAfterAssign());
         assertEquals(2, rules.blankLinesBeforePrintln());
     }
 
@@ -46,5 +46,13 @@ class FormattingRulesLoaderTest {
                 loader.load(new StringReader("{\"println_new_lines_before_call\": 5}"));
 
         assertEquals(2, rules.blankLinesBeforePrintln());
+    }
+
+    @Test
+    void loaderReadsSingleSpaceSeparationFlag() {
+        FormattingRules rules =
+                loader.load(new StringReader("{\"single_space_separation\": true}"));
+
+        assertTrue(rules.singleSpaceSeparation());
     }
 }

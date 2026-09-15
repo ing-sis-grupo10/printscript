@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.io.StringReader;
 import java.io.StringWriter;
+import java.util.Optional;
 import org.junit.jupiter.api.Test;
 
 class PrintScriptFormatterTest {
@@ -11,14 +12,23 @@ class PrintScriptFormatterTest {
     private String format(String source, FormattingRules rules) {
         var formatter = new PrintScriptFormatter(rules);
         var writer = new StringWriter();
-        formatter.format(new StringReader(source), writer);
+        formatter.format(new StringReader(source), writer, "1.1");
         return writer.toString();
     }
 
     @Test
     void formatsWithAllSpacingRulesOn() {
         String source = "let     a:number=13*4\n;\nlet   b :string  =   \"hi\" ;";
-        var rules = new FormattingRules(true, true, true, true, 1, true, 2);
+        var rules =
+                new FormattingRules(
+                        Optional.of(true),
+                        Optional.of(true),
+                        Optional.of(true),
+                        Optional.of(true),
+                        false,
+                        1,
+                        true,
+                        2);
 
         String result = format(source, rules);
 
@@ -28,7 +38,16 @@ class PrintScriptFormatterTest {
     @Test
     void formatsWithAllSpacingRulesOff() {
         String source = "let   a : number = 2 + 2 ;";
-        var rules = new FormattingRules(false, false, false, false, 1, true, 2);
+        var rules =
+                new FormattingRules(
+                        Optional.of(false),
+                        Optional.of(false),
+                        Optional.of(false),
+                        Optional.of(false),
+                        false,
+                        1,
+                        true,
+                        2);
 
         String result = format(source, rules);
 
@@ -38,7 +57,16 @@ class PrintScriptFormatterTest {
     @Test
     void spaceBeforeColonOnlyAppliesBeforeNotAfter() {
         String source = "let a:number=5;";
-        var rules = new FormattingRules(true, false, false, false, 1, true, 2);
+        var rules =
+                new FormattingRules(
+                        Optional.of(true),
+                        Optional.of(false),
+                        Optional.of(false),
+                        Optional.of(false),
+                        false,
+                        1,
+                        true,
+                        2);
 
         String result = format(source, rules);
 
@@ -48,7 +76,16 @@ class PrintScriptFormatterTest {
     @Test
     void spaceAfterAssignOnlyAppliesAfterNotBefore() {
         String source = "let a:number=5;";
-        var rules = new FormattingRules(false, false, false, true, 1, true, 2);
+        var rules =
+                new FormattingRules(
+                        Optional.of(false),
+                        Optional.of(false),
+                        Optional.of(false),
+                        Optional.of(true),
+                        false,
+                        1,
+                        true,
+                        2);
 
         String result = format(source, rules);
 
@@ -58,7 +95,16 @@ class PrintScriptFormatterTest {
     @Test
     void printlnWithZeroBlankLinesBefore() {
         String source = "let a: string;\nprintln(a);";
-        var rules = new FormattingRules(true, true, true, true, 0, true, 2);
+        var rules =
+                new FormattingRules(
+                        Optional.of(true),
+                        Optional.of(true),
+                        Optional.of(true),
+                        Optional.of(true),
+                        false,
+                        0,
+                        true,
+                        2);
 
         String result = format(source, rules);
 
@@ -68,7 +114,16 @@ class PrintScriptFormatterTest {
     @Test
     void printlnWithTwoBlankLinesBefore() {
         String source = "let a: string;\nprintln(a);";
-        var rules = new FormattingRules(true, true, true, true, 2, true, 2);
+        var rules =
+                new FormattingRules(
+                        Optional.of(true),
+                        Optional.of(true),
+                        Optional.of(true),
+                        Optional.of(true),
+                        false,
+                        2,
+                        true,
+                        2);
 
         String result = format(source, rules);
 
@@ -76,7 +131,7 @@ class PrintScriptFormatterTest {
     }
 
     @Test
-    void parenthesesNeverHaveSpaceAroundThem() {
+    void parenthesesNeverHaveSpaceAroundThemWhenNotConfigured() {
         String source = "println(\"hola\");";
         var rules = FormattingRules.defaults();
 
@@ -89,7 +144,16 @@ class PrintScriptFormatterTest {
     void ifBraceGoesOnNextLineWhenConfigured() {
         String source =
                 "let something: boolean = true;\nif (something) {\nprintln(\"Entered if\");\n}";
-        var rules = new FormattingRules(true, true, true, true, 1, false, 2);
+        var rules =
+                new FormattingRules(
+                        Optional.of(true),
+                        Optional.of(true),
+                        Optional.of(true),
+                        Optional.of(true),
+                        false,
+                        1,
+                        false,
+                        2);
 
         String result = format(source, rules);
 
@@ -107,7 +171,7 @@ class PrintScriptFormatterTest {
         String result = format(source, rules);
 
         assertEquals(
-                "let something : boolean = true;\nif (something) {\n  println(\"Entered if\");\n}",
+                "let something: boolean = true;\nif (something) {\n  println(\"Entered if\");\n}",
                 result);
     }
 
@@ -115,12 +179,52 @@ class PrintScriptFormatterTest {
     void indentsNestedIfBlocksAccordingToConfiguredSize() {
         String source =
                 "let something: boolean = true;\nif (something) {\nif (something) {\nprintln(\"Entered two ifs\");\n}\n}";
-        var rules = new FormattingRules(true, true, true, true, 1, true, 4);
+        var rules =
+                new FormattingRules(
+                        Optional.of(true),
+                        Optional.of(true),
+                        Optional.of(true),
+                        Optional.of(true),
+                        false,
+                        1,
+                        true,
+                        4);
 
         String result = format(source, rules);
 
         assertEquals(
                 "let something : boolean = true;\nif (something) {\n    if (something) {\n        println(\"Entered two ifs\");\n    }\n}",
+                result);
+    }
+
+    @Test
+    void unconfiguredColonSpacingPreservesOriginalPerOccurrence() {
+        String source = "let a:number = 1;\nlet b: number = 2;\nlet c : number = 3;";
+        var rules = FormattingRules.defaults();
+
+        String result = format(source, rules);
+
+        assertEquals("let a:number = 1;\nlet b: number = 2;\nlet c : number = 3;", result);
+    }
+
+    @Test
+    void singleSpaceSeparationForcesExactlyOneSpaceEverywhereIncludingParens() {
+        String source = "let something:      string=\"a really cool thing\";\nprintln(something);";
+        var rules =
+                new FormattingRules(
+                        Optional.empty(),
+                        Optional.empty(),
+                        Optional.empty(),
+                        Optional.empty(),
+                        true,
+                        0,
+                        true,
+                        2);
+
+        String result = format(source, rules);
+
+        assertEquals(
+                "let something : string = \"a really cool thing\";\nprintln ( something );",
                 result);
     }
 }

@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.io.Reader;
 import java.io.UncheckedIOException;
 import java.io.Writer;
+import java.util.Optional;
 import printscript.common.result.Diagnostic;
 import printscript.common.result.Failure;
 import printscript.common.result.Result;
@@ -29,6 +30,7 @@ public final class PrintScriptFormatter implements Formatter {
 
             while (lexer.hasNext()) {
                 Token current = nextToken(lexer);
+                String currentGap = lexer.lastGap();
                 if (current.type() == TokenType.EOF) {
                     break;
                 }
@@ -38,7 +40,7 @@ public final class PrintScriptFormatter implements Formatter {
                 }
 
                 if (previous != null) {
-                    out.write(separator(previous, current));
+                    out.write(separator(previous, current, currentGap));
                 }
                 out.write(render(current));
 
@@ -72,7 +74,7 @@ public final class PrintScriptFormatter implements Formatter {
         return token.value();
     }
 
-    private String separator(Token previous, Token current) {
+    private String separator(Token previous, Token current, String originalGap) {
         if (current.type() == TokenType.LEFT_BRACE) {
             return rules.ifBraceSameLine() ? " " : "\n" + indent();
         }
@@ -101,23 +103,33 @@ public final class PrintScriptFormatter implements Formatter {
             return " ";
         }
         if (current.type() == TokenType.COLON) {
-            return rules.spaceBeforeColon() ? " " : "";
+            return resolve(rules.spaceBeforeColon(), originalGap);
         }
         if (previous.type() == TokenType.COLON) {
-            return rules.spaceAfterColon() ? " " : "";
+            return resolve(rules.spaceAfterColon(), originalGap);
         }
         if (current.type() == TokenType.ASSIGN) {
-            return rules.spaceBeforeAssign() ? " " : "";
+            return resolve(rules.spaceBeforeAssign(), originalGap);
         }
         if (previous.type() == TokenType.ASSIGN) {
-            return rules.spaceAfterAssign() ? " " : "";
+            return resolve(rules.spaceAfterAssign(), originalGap);
         }
         if (current.type() == TokenType.LEFT_PAREN
                 || previous.type() == TokenType.LEFT_PAREN
                 || current.type() == TokenType.RIGHT_PAREN) {
-            return "";
+            return rules.singleSpaceSeparation() ? " " : originalGap;
         }
         return " ";
+    }
+
+    private String resolve(Optional<Boolean> configured, String originalGap) {
+        if (configured.isPresent()) {
+            return configured.get() ? " " : "";
+        }
+        if (rules.singleSpaceSeparation()) {
+            return " ";
+        }
+        return originalGap;
     }
 
     private String indent() {
