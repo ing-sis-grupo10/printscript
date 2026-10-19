@@ -11,10 +11,6 @@
         <Bug pattern="BC_UNCONFIRMED_CAST"/>
     </Match>
     <Match>
-        <Class name="printscript.interpreter.PipelineIntegrationTest"/>
-        <Bug pattern="DM_DEFAULT_ENCODING"/>
-    </Match>
-    <Match>
         <Class name="printscript.lexer.PrintScriptLexer"/>
         <Bug pattern="CT_CONSTRUCTOR_THROW"/>
     </Match>

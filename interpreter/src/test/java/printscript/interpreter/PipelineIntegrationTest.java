@@ -8,7 +8,6 @@ import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
 import java.io.StringReader;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 import printscript.ast.Statement;
@@ -16,24 +15,10 @@ import printscript.common.Version;
 import printscript.common.result.Failure;
 import printscript.common.result.Result;
 import printscript.common.result.Success;
-import printscript.interpreter.handler.AssignmentHandler;
-import printscript.interpreter.handler.HandlerRegistry;
-import printscript.interpreter.handler.IfStatementHandler;
-import printscript.interpreter.handler.PrintlnStatementHandler;
-import printscript.interpreter.handler.StatementHandler;
-import printscript.interpreter.handler.VariableDeclarationHandler;
-import printscript.interpreter.runtime.ExpressionEvaluator;
 import printscript.interpreter.runtime.FixedInputSource;
-import printscript.interpreter.runtime.GlobalEnvironment;
 import printscript.interpreter.runtime.InputSource;
 import printscript.lexer.LexerFactory;
-import printscript.parser.AssignmentParser;
-import printscript.parser.IfStatementParser;
-import printscript.parser.PrecedenceClimbingExpressionParser;
-import printscript.parser.PrintScriptParser;
-import printscript.parser.PrintlnStatementParser;
-import printscript.parser.StatementParser;
-import printscript.parser.VariableDeclarationParser;
+import printscript.parser.ParserFactory;
 
 class PipelineIntegrationTest {
 
@@ -44,28 +29,15 @@ class PipelineIntegrationTest {
     }
 
     private RunResult run(String source, InputSource inputSource) {
-        var lexer = LexerFactory.create(new StringReader(source), Version.V1_1);
-
-        List<StatementParser> statementParsers = new ArrayList<>();
-        statementParsers.add(new VariableDeclarationParser());
-        statementParsers.add(new AssignmentParser());
-        statementParsers.add(new PrintlnStatementParser());
-        statementParsers.add(new IfStatementParser(() -> statementParsers));
-
-        var parser =
-                new PrintScriptParser(
-                        lexer, statementParsers, new PrecedenceClimbingExpressionParser());
-
         var output = new ByteArrayOutputStream();
-        var evaluator = new ExpressionEvaluator(inputSource);
-        List<StatementHandler> statementHandlers = new ArrayList<>();
-        HandlerRegistry registry = new HandlerRegistry(statementHandlers);
-        statementHandlers.add(new VariableDeclarationHandler(evaluator));
-        statementHandlers.add(new AssignmentHandler(evaluator));
-        statementHandlers.add(new PrintlnStatementHandler(evaluator, new PrintStream(output)));
-        statementHandlers.add(new IfStatementHandler(evaluator, () -> registry));
-
-        var interpreter = new PrintScriptInterpreter(parser, new GlobalEnvironment(), registry);
+        var tokens = LexerFactory.create(new StringReader(source), Version.V1_1);
+        var statements = ParserFactory.create(tokens, Version.V1_1);
+        var interpreter =
+                InterpreterFactory.create(
+                        statements,
+                        Version.V1_1,
+                        new PrintStream(output, false, StandardCharsets.UTF_8),
+                        inputSource);
 
         boolean hadFailure = false;
         while (interpreter.hasNext()) {

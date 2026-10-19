@@ -17,22 +17,11 @@ import printscript.common.result.Severity;
 import printscript.formatter.FormattingRules;
 import printscript.formatter.FormattingRulesLoader;
 import printscript.formatter.PrintScriptFormatter;
+import printscript.interpreter.InterpreterFactory;
 import printscript.interpreter.PrintScriptInterpreter;
-import printscript.interpreter.handler.AssignmentHandler;
-import printscript.interpreter.handler.HandlerRegistry;
-import printscript.interpreter.handler.IfStatementHandler;
-import printscript.interpreter.handler.PrintlnStatementHandler;
-import printscript.interpreter.handler.StatementHandler;
-import printscript.interpreter.handler.VariableDeclarationHandler;
 import printscript.interpreter.runtime.*;
 import printscript.lexer.LexerFactory;
-import printscript.parser.AssignmentParser;
-import printscript.parser.IfStatementParser;
-import printscript.parser.PrecedenceClimbingExpressionParser;
-import printscript.parser.PrintScriptParser;
-import printscript.parser.PrintlnStatementParser;
-import printscript.parser.StatementParser;
-import printscript.parser.VariableDeclarationParser;
+import printscript.parser.ParserFactory;
 
 final class Pipeline {
     private final String sourceFile;
@@ -106,28 +95,9 @@ final class Pipeline {
 
     private PrintScriptInterpreter buildInterpreter(
             Reader source, PrintStream out, InputSource inputSource) {
-        var lexer = LexerFactory.create(source, version);
-
-        List<StatementParser> statementParsers = new ArrayList<>();
-        statementParsers.add(new VariableDeclarationParser());
-        statementParsers.add(new AssignmentParser());
-        statementParsers.add(new PrintlnStatementParser());
-        statementParsers.add(new IfStatementParser(() -> statementParsers));
-
-        var parser =
-                new PrintScriptParser(
-                        lexer, statementParsers, new PrecedenceClimbingExpressionParser());
-
-        var evaluator = new ExpressionEvaluator(inputSource);
-        List<StatementHandler> statementHandlers = new ArrayList<>();
-        HandlerRegistry handlers = new HandlerRegistry(statementHandlers);
-        statementHandlers.add(new VariableDeclarationHandler(evaluator));
-        statementHandlers.add(new AssignmentHandler(evaluator));
-        statementHandlers.add(new PrintlnStatementHandler(evaluator, out));
-        statementHandlers.add(new IfStatementHandler(evaluator, () -> handlers));
-
-        Environment environment = new GlobalEnvironment();
-        return new PrintScriptInterpreter(parser, environment, handlers);
+        var tokens = LexerFactory.create(source, version);
+        var statements = ParserFactory.create(tokens, version);
+        return InterpreterFactory.create(statements, version, out, inputSource);
     }
 
     private PrintStream silentOutput() {
