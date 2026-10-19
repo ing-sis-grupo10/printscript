@@ -1,6 +1,7 @@
 package printscript.cli;
 
 import java.io.IOException;
+import printscript.common.Version;
 
 public final class Main {
 
@@ -14,12 +15,12 @@ public final class Main {
         String operation = args[0];
         String sourceFile = args[1];
         String configFile = null;
-        String version = "1.1";
+        String versionLabel = Version.latest().label();
 
         for (int i = 2; i < args.length; i++) {
             switch (args[i]) {
                 case "--config" -> configFile = requireValue(args, i++);
-                case "--version" -> version = requireValue(args, i++);
+                case "--version" -> versionLabel = requireValue(args, i++);
                 default -> {
                     System.err.println("Argumento desconocido: " + args[i]);
                     System.exit(2);
@@ -28,9 +29,13 @@ public final class Main {
             }
         }
 
-        if (!"1.0".equals(version) && !"1.1".equals(version)) {
-            System.err.println("Versión no soportada: " + version);
+        Version version;
+        try {
+            version = Version.from(versionLabel);
+        } catch (IllegalArgumentException e) {
+            System.err.println(e.getMessage());
             System.exit(1);
+            return;
         }
 
         Pipeline pipeline = new Pipeline(sourceFile, configFile, version);

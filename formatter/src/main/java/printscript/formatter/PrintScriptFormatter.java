@@ -5,12 +5,14 @@ import java.io.Reader;
 import java.io.UncheckedIOException;
 import java.io.Writer;
 import java.util.Optional;
+import printscript.common.Version;
 import printscript.common.result.Diagnostic;
 import printscript.common.result.Failure;
 import printscript.common.result.Result;
 import printscript.common.result.Success;
 import printscript.common.token.Token;
 import printscript.common.token.TokenType;
+import printscript.lexer.LexerFactory;
 import printscript.lexer.PrintScriptLexer;
 
 public final class PrintScriptFormatter implements Formatter {
@@ -24,12 +26,12 @@ public final class PrintScriptFormatter implements Formatter {
     }
 
     @Override
-    public void format(Reader source, Writer out, String version) {
+    public void format(Reader source, Writer out, Version version) {
         try {
             depth = 0;
             sawPrintlnInCurrentStatement = false;
             previousStatementWasPrintln = false;
-            PrintScriptLexer lexer = new PrintScriptLexer(source, version);
+            PrintScriptLexer lexer = LexerFactory.create(source, version);
             Token previous = null;
 
             while (lexer.hasNext()) {

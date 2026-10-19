@@ -6,6 +6,7 @@ import java.io.StringReader;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 import printscript.ast.Statement;
+import printscript.common.Version;
 import printscript.common.result.Diagnostic;
 import printscript.common.result.Failure;
 import printscript.common.result.Result;
@@ -17,7 +18,7 @@ import printscript.interpreter.handler.PrintlnStatementHandler;
 import printscript.interpreter.handler.VariableDeclarationHandler;
 import printscript.interpreter.runtime.ExpressionEvaluator;
 import printscript.interpreter.runtime.GlobalEnvironment;
-import printscript.lexer.PrintScriptLexer;
+import printscript.lexer.LexerFactory;
 import printscript.parser.AssignmentParser;
 import printscript.parser.PrecedenceClimbingExpressionParser;
 import printscript.parser.PrintScriptParser;
@@ -54,7 +55,7 @@ public class AnalyzerPipelineDemo {
     }
 
     private static PrintScriptAnalyzer buildAnalyzer(String source) {
-        var lexer = new PrintScriptLexer(new StringReader(source));
+        var lexer = LexerFactory.create(new StringReader(source), Version.V1_1);
         var parser =
                 new PrintScriptParser(
                         lexer,

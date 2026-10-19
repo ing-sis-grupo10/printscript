@@ -14,6 +14,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
+import printscript.common.Version;
 
 class PipelineTest {
 
@@ -146,7 +147,7 @@ class PipelineTest {
     }
     """);
 
-        int exitCode = new Pipeline(path, null, "1.0").validate();
+        int exitCode = new Pipeline(path, null, Version.V1_0).validate();
 
         assertEquals(1, exitCode);
     }

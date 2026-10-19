@@ -1,6 +1,5 @@
 package printscript.lexer.finders;
 
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 import printscript.common.result.Result;
@@ -9,39 +8,15 @@ import printscript.common.token.TokenType;
 import printscript.lexer.patterns.LetterOrDigitPattern;
 import printscript.lexer.patterns.Pattern;
 
+// No sabe de versiones: recibe la tabla de keywords que le corresponda.
+// Qué keywords trae cada versión lo decide LexerFactory.
 public class KeywordFinder extends AbstractPatternFinder {
-
-    private static final Map<String, TokenType> BASE_KEYWORDS =
-            Map.of(
-                    "let", TokenType.LET,
-                    "number", TokenType.NUMBER_TYPE,
-                    "string", TokenType.STRING_TYPE,
-                    "println", TokenType.PRINTLN);
-
-    private static final Map<String, TokenType> V1_1_KEYWORDS =
-            Map.ofEntries(
-                    Map.entry("boolean", TokenType.BOOLEAN_TYPE),
-                    Map.entry("const", TokenType.CONST),
-                    Map.entry("if", TokenType.IF),
-                    Map.entry("else", TokenType.ELSE),
-                    Map.entry("true", TokenType.TRUE),
-                    Map.entry("false", TokenType.FALSE),
-                    Map.entry("readInput", TokenType.READ_INPUT),
-                    Map.entry("readEnv", TokenType.READ_ENV));
 
     private final Map<String, TokenType> keywords;
     private final Pattern letterOrDigitPattern = new LetterOrDigitPattern();
 
-    public KeywordFinder() {
-        this("1.1");
-    }
-
-    public KeywordFinder(String version) {
-        Map<String, TokenType> enabled = new HashMap<>(BASE_KEYWORDS);
-        if ("1.1".equals(version)) {
-            enabled.putAll(V1_1_KEYWORDS);
-        }
-        this.keywords = Map.copyOf(enabled);
+    public KeywordFinder(Map<String, TokenType> keywords) {
+        this.keywords = Map.copyOf(keywords);
     }
 
     @Override

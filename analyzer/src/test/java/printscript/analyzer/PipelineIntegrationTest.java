@@ -11,6 +11,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 import printscript.ast.Statement;
+import printscript.common.Version;
 import printscript.common.result.Failure;
 import printscript.common.result.Result;
 import printscript.common.result.Success;
@@ -21,7 +22,7 @@ import printscript.interpreter.handler.PrintlnStatementHandler;
 import printscript.interpreter.handler.VariableDeclarationHandler;
 import printscript.interpreter.runtime.ExpressionEvaluator;
 import printscript.interpreter.runtime.GlobalEnvironment;
-import printscript.lexer.PrintScriptLexer;
+import printscript.lexer.LexerFactory;
 import printscript.parser.AssignmentParser;
 import printscript.parser.PrecedenceClimbingExpressionParser;
 import printscript.parser.PrintScriptParser;
@@ -31,7 +32,7 @@ import printscript.parser.VariableDeclarationParser;
 class PipelineIntegrationTest {
 
     private PrintScriptAnalyzer pipelineFor(String source, AnalyzerRules rules) {
-        var lexer = new PrintScriptLexer(new StringReader(source));
+        var lexer = LexerFactory.create(new StringReader(source), Version.V1_1);
         var parser =
                 new PrintScriptParser(
                         lexer,

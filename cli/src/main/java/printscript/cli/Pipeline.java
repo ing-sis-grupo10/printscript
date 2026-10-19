@@ -9,6 +9,7 @@ import printscript.analyzer.AnalyzerRules;
 import printscript.analyzer.AnalyzerRulesLoader;
 import printscript.analyzer.PrintScriptAnalyzer;
 import printscript.ast.Statement;
+import printscript.common.Version;
 import printscript.common.result.Diagnostic;
 import printscript.common.result.Failure;
 import printscript.common.result.Result;
@@ -24,7 +25,7 @@ import printscript.interpreter.handler.PrintlnStatementHandler;
 import printscript.interpreter.handler.StatementHandler;
 import printscript.interpreter.handler.VariableDeclarationHandler;
 import printscript.interpreter.runtime.*;
-import printscript.lexer.PrintScriptLexer;
+import printscript.lexer.LexerFactory;
 import printscript.parser.AssignmentParser;
 import printscript.parser.IfStatementParser;
 import printscript.parser.PrecedenceClimbingExpressionParser;
@@ -36,13 +37,13 @@ import printscript.parser.VariableDeclarationParser;
 final class Pipeline {
     private final String sourceFile;
     private final String configFile;
-    private final String version;
+    private final Version version;
 
     Pipeline(String sourceFile, String configFile) {
-        this(sourceFile, configFile, "1.1");
+        this(sourceFile, configFile, Version.latest());
     }
 
-    Pipeline(String sourceFile, String configFile, String version) {
+    Pipeline(String sourceFile, String configFile, Version version) {
         this.sourceFile = sourceFile;
         this.configFile = configFile;
         this.version = version;
@@ -105,7 +106,7 @@ final class Pipeline {
 
     private PrintScriptInterpreter buildInterpreter(
             Reader source, PrintStream out, InputSource inputSource) {
-        var lexer = new PrintScriptLexer(source, version);
+        var lexer = LexerFactory.create(source, version);
 
         List<StatementParser> statementParsers = new ArrayList<>();
         statementParsers.add(new VariableDeclarationParser());

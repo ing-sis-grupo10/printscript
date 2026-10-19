@@ -12,6 +12,7 @@ import java.util.ArrayList;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 import printscript.ast.Statement;
+import printscript.common.Version;
 import printscript.common.result.Failure;
 import printscript.common.result.Result;
 import printscript.common.result.Success;
@@ -25,7 +26,7 @@ import printscript.interpreter.runtime.ExpressionEvaluator;
 import printscript.interpreter.runtime.FixedInputSource;
 import printscript.interpreter.runtime.GlobalEnvironment;
 import printscript.interpreter.runtime.InputSource;
-import printscript.lexer.PrintScriptLexer;
+import printscript.lexer.LexerFactory;
 import printscript.parser.AssignmentParser;
 import printscript.parser.IfStatementParser;
 import printscript.parser.PrecedenceClimbingExpressionParser;
@@ -43,7 +44,7 @@ class PipelineIntegrationTest {
     }
 
     private RunResult run(String source, InputSource inputSource) {
-        var lexer = new PrintScriptLexer(new StringReader(source));
+        var lexer = LexerFactory.create(new StringReader(source), Version.V1_1);
 
         List<StatementParser> statementParsers = new ArrayList<>();
         statementParsers.add(new VariableDeclarationParser());

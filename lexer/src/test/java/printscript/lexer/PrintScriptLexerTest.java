@@ -6,6 +6,7 @@ import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.List;
 import org.junit.jupiter.api.Test;
+import printscript.common.Version;
 import printscript.common.result.Failure;
 import printscript.common.result.Result;
 import printscript.common.result.Success;
@@ -22,7 +23,7 @@ class PrintScriptLexerTest {
     @Test
     void tokenizesLetDeclaration() {
         String source = "let cantidad: number = 42;";
-        PrintScriptLexer lexer = new PrintScriptLexer(new StringReader(source));
+        PrintScriptLexer lexer = LexerFactory.create(new StringReader(source), Version.V1_1);
 
         List<Token> tokens = new ArrayList<>();
         while (lexer.hasNext()) {
@@ -49,7 +50,7 @@ class PrintScriptLexerTest {
     @Test
     void capturesCorrectLexemes() {
         String source = "let cantidad: number = 42;";
-        PrintScriptLexer lexer = new PrintScriptLexer(new StringReader(source));
+        PrintScriptLexer lexer = LexerFactory.create(new StringReader(source), Version.V1_1);
 
         List<Token> tokens = new ArrayList<>();
         while (lexer.hasNext()) {
@@ -64,7 +65,7 @@ class PrintScriptLexerTest {
     @Test
     void tokenizesPrintlnWithString() {
         String source = "println(\"hola\");";
-        PrintScriptLexer lexer = new PrintScriptLexer(new StringReader(source));
+        PrintScriptLexer lexer = LexerFactory.create(new StringReader(source), Version.V1_1);
 
         List<Token> tokens = new ArrayList<>();
         while (lexer.hasNext()) {
@@ -90,7 +91,7 @@ class PrintScriptLexerTest {
     @Test
     void reportsInvalidCharacterAsFailure() {
         String source = "let x @ number;";
-        PrintScriptLexer lexer = new PrintScriptLexer(new StringReader(source));
+        PrintScriptLexer lexer = LexerFactory.create(new StringReader(source), Version.V1_1);
 
         boolean foundFailure = false;
         while (lexer.hasNext()) {
@@ -105,7 +106,7 @@ class PrintScriptLexerTest {
     @Test
     void tokenizesIdentifierWithUnderscoreAndDigits() {
         String source = "let mi_variable2: number = 10;";
-        PrintScriptLexer lexer = new PrintScriptLexer(new StringReader(source));
+        PrintScriptLexer lexer = LexerFactory.create(new StringReader(source), Version.V1_1);
 
         List<Token> tokens = new ArrayList<>();
         while (lexer.hasNext()) {
@@ -119,7 +120,7 @@ class PrintScriptLexerTest {
     @Test
     void tokenizesArithmeticExpression() {
         String source = "let resultado: number = a + b - c * d / e;";
-        PrintScriptLexer lexer = new PrintScriptLexer(new StringReader(source));
+        PrintScriptLexer lexer = LexerFactory.create(new StringReader(source), Version.V1_1);
 
         List<Token> tokens = new ArrayList<>();
         while (lexer.hasNext()) {
@@ -154,7 +155,7 @@ class PrintScriptLexerTest {
     @Test
     void tokenizesMultipleStatementsAcrossLines() {
         String source = "let a: number = 1;\nlet b: number = 2;";
-        PrintScriptLexer lexer = new PrintScriptLexer(new StringReader(source));
+        PrintScriptLexer lexer = LexerFactory.create(new StringReader(source), Version.V1_1);
 
         List<Token> tokens = new ArrayList<>();
         while (lexer.hasNext()) {

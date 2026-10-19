@@ -6,13 +6,14 @@ import java.io.StringReader;
 import java.io.StringWriter;
 import java.util.Optional;
 import org.junit.jupiter.api.Test;
+import printscript.common.Version;
 
 class PrintScriptFormatterTest {
 
     private String format(String source, FormattingRules rules) {
         var formatter = new PrintScriptFormatter(rules);
         var writer = new StringWriter();
-        formatter.format(new StringReader(source), writer, "1.1");
+        formatter.format(new StringReader(source), writer, Version.V1_1);
         return writer.toString();
     }
 
