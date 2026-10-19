@@ -15,6 +15,8 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import printscript.common.Version;
+import printscript.common.token.Position;
+import printscript.common.token.Span;
 
 class PipelineTest {
 
@@ -166,5 +168,20 @@ class PipelineTest {
         int exitCode = new Pipeline(path, null).validate();
 
         assertEquals(0, exitCode);
+    }
+
+    @Test
+    void describesPositionsStartingAtOneWithInclusiveEnd() {
+        // "noExiste" en "println(noExiste);" (segunda línea): índices 8..16 exclusivo
+        Span span = Span.of(new Position(1, 8), new Position(1, 16));
+
+        assertEquals("2:9 - 2:16", Pipeline.describe(span));
+    }
+
+    @Test
+    void describesZeroWidthSpan() {
+        Span eof = Span.of(new Position(3, 0), new Position(3, 0));
+
+        assertEquals("4:1 - 4:1", Pipeline.describe(eof));
     }
 }

@@ -14,6 +14,7 @@ import printscript.common.result.Diagnostic;
 import printscript.common.result.Failure;
 import printscript.common.result.Result;
 import printscript.common.result.Severity;
+import printscript.common.token.Span;
 import printscript.formatter.FormattingRules;
 import printscript.formatter.FormattingRulesLoader;
 import printscript.formatter.PrintScriptFormatter;
@@ -125,21 +126,19 @@ final class Pipeline {
     private int report(List<Diagnostic> diagnostics) {
         for (Diagnostic d : diagnostics) {
             System.err.println(
-                    "["
-                            + d.severity()
-                            + "] "
-                            + d.message()
-                            + " ("
-                            + d.span().start().line()
-                            + ":"
-                            + d.span().start().column()
-                            + " - "
-                            + d.span().end().line()
-                            + ":"
-                            + d.span().end().column()
-                            + ")");
+                    "[" + d.severity() + "] " + d.message() + " (" + describe(d.span()) + ")");
         }
         boolean hasErrors = diagnostics.stream().anyMatch(d -> d.severity() == Severity.ERROR);
         return hasErrors ? 1 : 0;
+    }
+
+    // Internamente las posiciones empiezan en 0 y la columna de fin es exclusiva.
+    // Al usuario se las mostramos como un editor: desde 1 y con el fin inclusivo.
+    static String describe(Span span) {
+        int startLine = span.start().line() + 1;
+        int startColumn = span.start().column() + 1;
+        int endLine = span.end().line() + 1;
+        int endColumn = span.end().equals(span.start()) ? startColumn : span.end().column();
+        return startLine + ":" + startColumn + " - " + endLine + ":" + endColumn;
     }
 }
