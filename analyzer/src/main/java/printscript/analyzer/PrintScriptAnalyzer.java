@@ -52,7 +52,10 @@ public final class PrintScriptAnalyzer implements Analyzer {
                 checkReadInputIfPresent(println.argument());
             }
             case Assignment assignment -> checkReadInputIfPresent(assignment.value());
-            case IfStatement ifStatement -> {}
+            case IfStatement ifStatement -> {
+                ifStatement.thenBranch().forEach(this::check);
+                ifStatement.elseBranch().ifPresent(branch -> branch.forEach(this::check));
+            }
         }
     }
 
