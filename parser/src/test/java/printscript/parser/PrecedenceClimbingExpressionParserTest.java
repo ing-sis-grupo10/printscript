@@ -142,4 +142,34 @@ class PrecedenceClimbingExpressionParserTest {
 
         assertThrows(ParseError.class, () -> parser.parseExpression(tokens));
     }
+
+    @Test
+    void parenthesesOverridePrecedence() {
+        // (1 + 2) * 3
+        Expression result =
+                parser.parseExpression(
+                        streamOf(
+                                new Token(TokenType.LEFT_PAREN, "(", span("(")),
+                                new Token(TokenType.NUMBER_LITERAL, "1", span("1")),
+                                new Token(TokenType.PLUS, "+", span("+")),
+                                new Token(TokenType.NUMBER_LITERAL, "2", span("2")),
+                                new Token(TokenType.RIGHT_PAREN, ")", span(")")),
+                                new Token(TokenType.STAR, "*", span("*")),
+                                new Token(TokenType.NUMBER_LITERAL, "3", span("3"))));
+
+        var product = assertInstanceOf(BinaryExpression.class, result);
+        assertEquals(BinaryOperator.TIMES, product.operator());
+        var sum = assertInstanceOf(BinaryExpression.class, product.left());
+        assertEquals(BinaryOperator.PLUS, sum.operator());
+    }
+
+    @Test
+    void unclosedParenthesisIsAParseError() {
+        TokenStream tokens =
+                streamOf(
+                        new Token(TokenType.LEFT_PAREN, "(", span("(")),
+                        new Token(TokenType.NUMBER_LITERAL, "1", span("1")));
+
+        assertThrows(ParseError.class, () -> parser.parseExpression(tokens));
+    }
 }

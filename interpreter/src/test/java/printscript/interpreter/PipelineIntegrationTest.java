@@ -318,4 +318,15 @@ class PipelineIntegrationTest {
 
         assertTrue(result.hadFailure());
     }
+
+    @Test
+    void parenthesesChangeEvaluationOrder() {
+        RunResult result = run("""
+    let x: number = (1 + 2) * 3;
+    println(x);
+    """);
+
+        assertFalse(result.hadFailure());
+        assertEquals("9", result.output());
+    }
 }
