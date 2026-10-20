@@ -82,9 +82,12 @@ public final class PrintScriptFormatter implements Formatter {
         };
     }
 
+    // Por defecto se normaliza a comillas dobles; si el contenido tiene comillas dobles
+    // se usan simples, para no generar un string inválido.
     private String render(Token token) {
         if (token.type() == TokenType.STRING_LITERAL) {
-            return "\"" + token.value() + "\"";
+            String quote = token.value().contains("\"") ? "'" : "\"";
+            return quote + token.value() + quote;
         }
         return token.value();
     }

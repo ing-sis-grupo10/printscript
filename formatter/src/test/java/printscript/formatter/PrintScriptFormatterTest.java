@@ -247,4 +247,18 @@ class PrintScriptFormatterTest {
                 "let something : string = \"a really cool thing\";\nprintln ( something );",
                 result);
     }
+
+    @Test
+    void stringWithDoubleQuotesIsWrittenWithSingleQuotes() {
+        String source = "let s: string = 'dijo \"hola\"';";
+
+        assertEquals(source, format(source, FormattingRules.defaults()));
+    }
+
+    @Test
+    void stringWithoutDoubleQuotesIsNormalizedToDoubleQuotes() {
+        assertEquals(
+                "let s: string = \"hola\";",
+                format("let s: string = 'hola';", FormattingRules.defaults()));
+    }
 }
