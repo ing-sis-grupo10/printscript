@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.io.Reader;
 import java.io.UncheckedIOException;
 import java.io.Writer;
+import java.util.List;
 import java.util.Optional;
 import printscript.common.Version;
 import printscript.common.result.Diagnostic;
@@ -12,60 +13,61 @@ import printscript.common.result.Result;
 import printscript.common.result.Success;
 import printscript.common.token.Token;
 import printscript.common.token.TokenType;
+import printscript.formatter.spacing.FormatContext;
+import printscript.formatter.spacing.SpacingRule;
+import printscript.formatter.spacing.SpacingRules;
 import printscript.lexer.LexerFactory;
 import printscript.lexer.PrintScriptLexer;
 
 public final class PrintScriptFormatter implements Formatter {
-    private final FormattingRules rules;
-    private int depth;
-    private boolean sawPrintlnInCurrentStatement;
-    private boolean previousStatementWasPrintln;
+    private final List<SpacingRule> spacingRules;
+    private final int indentSize;
 
-    public PrintScriptFormatter(FormattingRules rules) {
-        this.rules = rules;
+    public PrintScriptFormatter(FormattingRules config) {
+        this(SpacingRules.from(config), config.indentSizeInsideIf());
+    }
+
+    public PrintScriptFormatter(List<SpacingRule> spacingRules, int indentSize) {
+        this.spacingRules = List.copyOf(spacingRules);
+        this.indentSize = indentSize;
     }
 
     @Override
     public void format(Reader source, Writer out, Version version) {
         try {
-            depth = 0;
-            sawPrintlnInCurrentStatement = false;
-            previousStatementWasPrintln = false;
             PrintScriptLexer lexer = LexerFactory.create(source, version);
-            Token previous = null;
+            FormatState state = new FormatState(indentSize);
 
             while (lexer.hasNext()) {
                 Token current = nextToken(lexer);
-                String currentGap = lexer.lastGap();
                 if (current.type() == TokenType.EOF) {
                     break;
                 }
-
-                if (current.type() == TokenType.RIGHT_BRACE) {
-                    depth--;
-                }
-
-                if (previous != null) {
-                    out.write(separator(previous, current, currentGap));
+                state.beforeToken(current);
+                Optional<Token> previous = state.previous();
+                if (previous.isPresent()) {
+                    out.write(separator(previous.get(), current, state.context(lexer.lastGap())));
                 }
                 out.write(render(current));
-
-                if (current.type() == TokenType.LEFT_BRACE) {
-                    depth++;
-                }
-                if (current.type() == TokenType.PRINTLN) {
-                    sawPrintlnInCurrentStatement = true;
-                }
-                if (current.type() == TokenType.SEMICOLON) {
-                    previousStatementWasPrintln = sawPrintlnInCurrentStatement;
-                    sawPrintlnInCurrentStatement = false;
-                }
-
-                previous = current;
+                state.afterToken(current);
             }
         } catch (IOException e) {
             throw new UncheckedIOException("Error escribiendo la salida formateada", e);
         }
+    }
+
+    private String separator(Token previous, Token current, FormatContext context) {
+        for (SpacingRule rule : spacingRules) {
+            Optional<String> separator = rule.separator(previous, current, context);
+            if (separator.isPresent()) {
+                return separator.get();
+            }
+        }
+        throw new IllegalStateException(
+                "Ninguna regla decidió el espacio entre "
+                        + previous.type()
+                        + " y "
+                        + current.type());
     }
 
     private Token nextToken(PrintScriptLexer lexer) {
@@ -85,72 +87,5 @@ public final class PrintScriptFormatter implements Formatter {
             return "\"" + token.value() + "\"";
         }
         return token.value();
-    }
-
-    private String separator(Token previous, Token current, String originalGap) {
-        if (current.type() == TokenType.LEFT_BRACE) {
-            return rules.ifBraceSameLine() ? " " : "\n" + indent();
-        }
-        if (previous.type() == TokenType.LEFT_BRACE) {
-            return "\n" + indent();
-        }
-        if (current.type() == TokenType.RIGHT_BRACE) {
-            return "\n" + indent();
-        }
-        if (previous.type() == TokenType.RIGHT_BRACE) {
-            return current.type() == TokenType.ELSE ? " " : "\n" + indent();
-        }
-        if (previous.type() == TokenType.SEMICOLON) {
-            int blankLines = previousStatementWasPrintln ? rules.blankLinesAfterPrintln() : 0;
-            return "\n".repeat(1 + blankLines) + indent();
-        }
-        if (current.type() == TokenType.SEMICOLON) {
-            return "";
-        }
-        if (previous.type() == TokenType.IF && current.type() == TokenType.LEFT_PAREN) {
-            return " ";
-        }
-        if (isOperator(previous.type()) || isOperator(current.type())) {
-            return " ";
-        }
-        if (current.type() == TokenType.COLON) {
-            return resolve(rules.spaceBeforeColon(), originalGap);
-        }
-        if (previous.type() == TokenType.COLON) {
-            return resolve(rules.spaceAfterColon(), originalGap);
-        }
-        if (current.type() == TokenType.ASSIGN) {
-            return resolve(rules.spaceBeforeAssign(), originalGap);
-        }
-        if (previous.type() == TokenType.ASSIGN) {
-            return resolve(rules.spaceAfterAssign(), originalGap);
-        }
-        if (current.type() == TokenType.LEFT_PAREN
-                || previous.type() == TokenType.LEFT_PAREN
-                || current.type() == TokenType.RIGHT_PAREN) {
-            return rules.singleSpaceSeparation() ? " " : originalGap;
-        }
-        return " ";
-    }
-
-    private String resolve(Optional<Boolean> configured, String originalGap) {
-        if (configured.isPresent()) {
-            return configured.get() ? " " : "";
-        }
-        if (rules.singleSpaceSeparation()) {
-            return " ";
-        }
-        return originalGap;
-    }
-
-    private String indent() {
-        return " ".repeat(Math.max(depth, 0) * rules.indentSizeInsideIf());
-    }
-
-    private boolean isOperator(TokenType type) {
-        return type == TokenType.PLUS
-                || type == TokenType.MINUS
-                || type == TokenType.STAR
-                || type == TokenType.SLASH;
     }
 }
