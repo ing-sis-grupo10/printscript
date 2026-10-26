@@ -1,6 +1,12 @@
 package printscript.cli;
 
-import java.io.*;
+import java.io.FileReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
+import java.io.PrintStream;
+import java.io.Reader;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -20,7 +26,8 @@ import printscript.formatter.FormattingRulesLoader;
 import printscript.formatter.PrintScriptFormatter;
 import printscript.interpreter.InterpreterFactory;
 import printscript.interpreter.PrintScriptInterpreter;
-import printscript.interpreter.runtime.*;
+import printscript.interpreter.runtime.ConsoleInputSource;
+import printscript.interpreter.runtime.InputSource;
 import printscript.lexer.LexerFactory;
 import printscript.parser.ParserFactory;
 

@@ -17,6 +17,9 @@
         <module name="UnusedImports"/>
         <module name="RedundantImport"/>
         <module name="IllegalImport"/>
+        <module name="AvoidStarImport">  <!-- regla personalizada: sin wildcard imports (se permiten los static, ej. Assertions.*) -->
+            <property name="allowStaticMemberImports" value="true"/>
+        </module>
 
         <module name="TypeName"/>
         <module name="MethodName"/>
