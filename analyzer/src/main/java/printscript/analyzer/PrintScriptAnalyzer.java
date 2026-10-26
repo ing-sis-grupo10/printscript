@@ -3,24 +3,26 @@ package printscript.analyzer;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
-import java.util.regex.Pattern;
-import printscript.ast.*;
+import printscript.analyzer.rules.LintRule;
+import printscript.analyzer.rules.LintRules;
+import printscript.ast.IfStatement;
+import printscript.ast.Statement;
 import printscript.common.result.Diagnostic;
 import printscript.common.result.Result;
 import printscript.common.result.Success;
-import printscript.common.token.Span;
 
 public final class PrintScriptAnalyzer implements Analyzer {
-    private static final Pattern CAMEL_CASE = Pattern.compile("^[a-z][a-zA-Z0-9]*$");
-    private static final Pattern SNAKE_CASE = Pattern.compile("^[a-z][a-z0-9_]*$");
-
     private final Iterator<Result<Statement>> statements;
-    private final AnalyzerRules rules;
+    private final List<LintRule> rules;
     private final List<Diagnostic> collected = new ArrayList<>();
 
-    public PrintScriptAnalyzer(Iterator<Result<Statement>> statements, AnalyzerRules rules) {
+    public PrintScriptAnalyzer(Iterator<Result<Statement>> statements, AnalyzerRules config) {
+        this(statements, LintRules.from(config));
+    }
+
+    public PrintScriptAnalyzer(Iterator<Result<Statement>> statements, List<LintRule> rules) {
         this.statements = statements;
-        this.rules = rules;
+        this.rules = List.copyOf(rules);
     }
 
     @Override
@@ -32,7 +34,7 @@ public final class PrintScriptAnalyzer implements Analyzer {
     public Result<Statement> next() {
         Result<Statement> upstream = statements.next();
         if (upstream instanceof Success<Statement> success) {
-            check(success.value());
+            analyze(success.value());
         }
         return upstream;
     }
@@ -41,71 +43,15 @@ public final class PrintScriptAnalyzer implements Analyzer {
         return List.copyOf(collected);
     }
 
-    private void check(Statement statement) {
-        switch (statement) {
-            case VariableDeclaration declaration -> {
-                checkIdentifier(declaration.name(), declaration.span());
-                declaration.initializer().ifPresent(this::checkReadInputIfPresent);
-            }
-            case PrintlnStatement println -> {
-                checkPrintlnArgument(println.argument());
-                checkReadInputIfPresent(println.argument());
-            }
-            case Assignment assignment -> checkReadInputIfPresent(assignment.value());
-            case IfStatement ifStatement -> {
-                ifStatement.thenBranch().forEach(this::check);
-                ifStatement.elseBranch().ifPresent(branch -> branch.forEach(this::check));
-            }
+    // El recorrido vive acá: cada regla ve cada sentencia, incluidas las de adentro de los if.
+    // Las reglas no saben que existen los bloques.
+    private void analyze(Statement statement) {
+        for (LintRule rule : rules) {
+            collected.addAll(rule.check(statement));
         }
-    }
-
-    private void checkReadInputIfPresent(Expression expression) {
-        if (expression instanceof ReadInputExpression readInput) {
-            checkReadInputArgument(readInput.message());
-        }
-    }
-
-    private void checkReadInputArgument(Expression argument) {
-        if (!rules.readInputOnlyIdentifierOrLiteral()) return;
-        boolean valid =
-                argument instanceof Identifier
-                        || argument instanceof NumberLiteral
-                        || argument instanceof StringLiteral;
-        if (!valid) {
-            collected.add(
-                    Diagnostic.warning(
-                            "readInput solo puede recibir un identificador o un literal, no una expresión",
-                            argument.span()));
-        }
-    }
-
-    private void checkIdentifier(String name, Span span) {
-        if (!rules.identifierCaseEnabled()) return;
-        Pattern expected =
-                rules.identifierCase() == AnalyzerRules.IdentifierCase.SNAKE_CASE
-                        ? SNAKE_CASE
-                        : CAMEL_CASE;
-        if (!expected.matcher(name).matches()) {
-            collected.add(
-                    Diagnostic.warning(
-                            "El identificador '" + name + "' no respeta " + rules.identifierCase(),
-                            span));
-        }
-    }
-
-    private void checkPrintlnArgument(Expression argument) {
-        if (!rules.printlnOnlyIdentifierOrLiteral()) return;
-        boolean valid =
-                argument instanceof Identifier
-                        || argument instanceof NumberLiteral
-                        || argument instanceof StringLiteral
-                        || argument instanceof ReadInputExpression;
-
-        if (!valid) {
-            collected.add(
-                    Diagnostic.warning(
-                            "println solo puede recibir un identificador o un literal, no una expresión",
-                            argument.span()));
+        if (statement instanceof IfStatement ifStatement) {
+            ifStatement.thenBranch().forEach(this::analyze);
+            ifStatement.elseBranch().ifPresent(branch -> branch.forEach(this::analyze));
         }
     }
 }
