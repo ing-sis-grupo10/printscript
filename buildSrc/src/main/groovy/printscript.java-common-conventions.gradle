@@ -48,13 +48,9 @@ spotbugs {
     excludeFilter = rootProject.file('config/spotbugs/exclude.xml')
 }
 
-tasks.register('installGitHooks', Copy) {
-    from("$rootDir/hooks/pre-commit")
-    into("$rootDir/.git/hooks")
-}
+// Cualquier build instala el hook, así nadie depende de acordarse.
 tasks.named('build') {
-    dependsOn 'installGitHooks'
+    dependsOn ':installGitHooks'
 }
-
 
 

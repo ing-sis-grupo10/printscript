@@ -1,12 +1,10 @@
 #!/bin/sh
 set -e
 
-./gradlew spotlessApply
-
-if ! git diff --quiet; then
-  echo "⚠️ Se aplicaron cambios de formato. Agregalos con 'git add' y volvé a commitear."
+# Solo chequea, no modifica: así no importa qué otros cambios haya sin stagear.
+if ! ./gradlew spotlessCheck --quiet; then
+  echo "El código no respeta el formato. Corré './gradlew spotlessApply', agregá los cambios y volvé a commitear."
   exit 1
 fi
 
-./gradlew spotlessCheck
-./gradlew test
+./gradlew checkstyleMain checkstyleTest test
