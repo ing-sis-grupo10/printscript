@@ -15,3 +15,11 @@ dependencies {
 application {
     mainClass = 'printscript.cli.Main'
 }
+
+// Main es el punto de entrada: parsea argumentos y delega en Pipeline (que sí está testeado).
+// Llama a System.exit, por eso se deja fuera de la medición de cobertura.
+tasks.named('jacocoTestCoverageVerification') {
+    classDirectories.setFrom(files(classDirectories.files.collect {
+        fileTree(dir: it, exclude: ['printscript/cli/Main.class'])
+    }))
+}
