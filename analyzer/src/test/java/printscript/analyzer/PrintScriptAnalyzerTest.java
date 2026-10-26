@@ -9,7 +9,17 @@ import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.Test;
-import printscript.ast.*;
+import printscript.ast.Assignment;
+import printscript.ast.BinaryExpression;
+import printscript.ast.BinaryOperator;
+import printscript.ast.DeclaredType;
+import printscript.ast.Identifier;
+import printscript.ast.IfStatement;
+import printscript.ast.NumberLiteral;
+import printscript.ast.PrintlnStatement;
+import printscript.ast.ReadInputExpression;
+import printscript.ast.Statement;
+import printscript.ast.VariableDeclaration;
 import printscript.common.result.Diagnostic;
 import printscript.common.result.Result;
 import printscript.common.result.Success;
@@ -135,15 +145,29 @@ class PrintScriptAnalyzerTest {
     }
 
     @Test
-    void doesNotCheckIfStatements() {
+    void checksStatementsInsideBothIfBranches() {
+        var badName =
+                new VariableDeclaration(
+                        "mal_nombre", DeclaredType.NUMBER, Optional.empty(), false, span);
+        var printlnWithExpression =
+                new PrintlnStatement(
+                        new BinaryExpression(
+                                new NumberLiteral(BigDecimal.ONE, span),
+                                BinaryOperator.PLUS,
+                                new NumberLiteral(BigDecimal.ONE, span),
+                                span),
+                        span);
         var ifStatement =
                 new IfStatement(
-                        new Identifier("condicion", span), List.of(), Optional.empty(), span);
+                        new Identifier("condicion", span),
+                        List.of(badName),
+                        Optional.of(List.of(printlnWithExpression)),
+                        span);
 
         var analyzer = analyzerFor(List.of(ifStatement), AnalyzerRules.defaults());
         analyzer.next();
 
-        assertTrue(analyzer.diagnostics().isEmpty());
+        assertEquals(2, analyzer.diagnostics().size());
     }
 
     @Test

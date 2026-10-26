@@ -16,11 +16,6 @@ import printscript.common.token.Span;
 import printscript.common.token.Token;
 import printscript.common.token.TokenType;
 import printscript.lexer.finders.Finder;
-import printscript.lexer.finders.IdentifierFinder;
-import printscript.lexer.finders.KeywordFinder;
-import printscript.lexer.finders.NumberFinder;
-import printscript.lexer.finders.StringFinder;
-import printscript.lexer.finders.SymbolFinder;
 
 public class PrintScriptLexer implements Iterator<Result<Token>> {
 
@@ -35,19 +30,9 @@ public class PrintScriptLexer implements Iterator<Result<Token>> {
     private Result<Token> nextResult;
     private String lastGap = "";
 
-    public PrintScriptLexer(Reader reader) {
-        this(reader, "1.1");
-    }
-
-    public PrintScriptLexer(Reader reader, String version) {
+    public PrintScriptLexer(Reader reader, List<Finder> finders) {
         this.reader = new BufferedReader(reader);
-        this.finders =
-                List.of(
-                        new KeywordFinder(version),
-                        new IdentifierFinder(),
-                        new NumberFinder(),
-                        new StringFinder(),
-                        new SymbolFinder());
+        this.finders = List.copyOf(finders);
         this.currentRow = 0;
         this.eofEmitted = false;
         advanceLine();

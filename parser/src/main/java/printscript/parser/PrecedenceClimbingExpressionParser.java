@@ -58,10 +58,17 @@ public final class PrecedenceClimbingExpressionParser implements ExpressionParse
             case FALSE -> new BooleanLiteral(false, token.span());
             case READ_INPUT -> parseReadInput(tokens, token);
             case READ_ENV -> parseReadEnv(tokens, token);
+            case LEFT_PAREN -> parseGrouped(tokens);
             default ->
                     throw new ParseError(
                             "Se esperaba un número, string o identificador", token.span());
         };
+    }
+
+    private Expression parseGrouped(TokenStream tokens) {
+        Expression inner = parseExpression(tokens);
+        tokens.expect(TokenType.RIGHT_PAREN);
+        return inner;
     }
 
     private Expression parseNegativeNumber(TokenStream tokens, Token minusToken) {

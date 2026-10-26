@@ -1,0 +1,38 @@
+@startuml pipeline
+title PrintScript - Interacción entre componentes
+
+skinparam componentStyle uml2
+
+file "archivo .ps" as source
+
+component "Lexer" as lexer
+component "Parser" as parser
+component "Interpreter" as interpreter
+component "Analyzer" as analyzer
+component "Formatter" as formatter
+
+interface "Iterator<Result<Token>>" as tokens
+interface "Iterator<Result<Statement>>" as statements
+interface "Iterator<Result<Statement>>" as executed
+
+source --> lexer : Reader\n(línea a línea)
+
+lexer -- tokens
+parser --( tokens
+parser -- statements
+interpreter --( statements
+interpreter -- executed
+analyzer --( executed
+
+formatter --( tokens
+
+interpreter ..> "salida del programa" : println
+formatter ..> "código formateado"
+
+note bottom of statements
+  Cada etapa pide el siguiente elemento a la anterior:
+  el archivo nunca se carga completo en memoria.
+  Los errores viajan como Failure(Diagnostic), no como excepciones.
+end note
+
+@enduml

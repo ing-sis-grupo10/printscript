@@ -1,6 +1,12 @@
 package printscript.cli;
 
-import java.io.*;
+import java.io.FileReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
+import java.io.PrintStream;
+import java.io.Reader;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -9,40 +15,32 @@ import printscript.analyzer.AnalyzerRules;
 import printscript.analyzer.AnalyzerRulesLoader;
 import printscript.analyzer.PrintScriptAnalyzer;
 import printscript.ast.Statement;
+import printscript.common.Version;
 import printscript.common.result.Diagnostic;
 import printscript.common.result.Failure;
 import printscript.common.result.Result;
 import printscript.common.result.Severity;
+import printscript.common.token.Span;
 import printscript.formatter.FormattingRules;
 import printscript.formatter.FormattingRulesLoader;
 import printscript.formatter.PrintScriptFormatter;
+import printscript.interpreter.InterpreterFactory;
 import printscript.interpreter.PrintScriptInterpreter;
-import printscript.interpreter.handler.AssignmentHandler;
-import printscript.interpreter.handler.HandlerRegistry;
-import printscript.interpreter.handler.IfStatementHandler;
-import printscript.interpreter.handler.PrintlnStatementHandler;
-import printscript.interpreter.handler.StatementHandler;
-import printscript.interpreter.handler.VariableDeclarationHandler;
-import printscript.interpreter.runtime.*;
-import printscript.lexer.PrintScriptLexer;
-import printscript.parser.AssignmentParser;
-import printscript.parser.IfStatementParser;
-import printscript.parser.PrecedenceClimbingExpressionParser;
-import printscript.parser.PrintScriptParser;
-import printscript.parser.PrintlnStatementParser;
-import printscript.parser.StatementParser;
-import printscript.parser.VariableDeclarationParser;
+import printscript.interpreter.runtime.ConsoleInputSource;
+import printscript.interpreter.runtime.InputSource;
+import printscript.lexer.LexerFactory;
+import printscript.parser.ParserFactory;
 
 final class Pipeline {
     private final String sourceFile;
     private final String configFile;
-    private final String version;
+    private final Version version;
 
     Pipeline(String sourceFile, String configFile) {
-        this(sourceFile, configFile, "1.1");
+        this(sourceFile, configFile, Version.latest());
     }
 
-    Pipeline(String sourceFile, String configFile, String version) {
+    Pipeline(String sourceFile, String configFile, Version version) {
         this.sourceFile = sourceFile;
         this.configFile = configFile;
         this.version = version;
@@ -105,28 +103,9 @@ final class Pipeline {
 
     private PrintScriptInterpreter buildInterpreter(
             Reader source, PrintStream out, InputSource inputSource) {
-        var lexer = new PrintScriptLexer(source, version);
-
-        List<StatementParser> statementParsers = new ArrayList<>();
-        statementParsers.add(new VariableDeclarationParser());
-        statementParsers.add(new AssignmentParser());
-        statementParsers.add(new PrintlnStatementParser());
-        statementParsers.add(new IfStatementParser(() -> statementParsers));
-
-        var parser =
-                new PrintScriptParser(
-                        lexer, statementParsers, new PrecedenceClimbingExpressionParser());
-
-        var evaluator = new ExpressionEvaluator(inputSource);
-        List<StatementHandler> statementHandlers = new ArrayList<>();
-        HandlerRegistry handlers = new HandlerRegistry(statementHandlers);
-        statementHandlers.add(new VariableDeclarationHandler(evaluator));
-        statementHandlers.add(new AssignmentHandler(evaluator));
-        statementHandlers.add(new PrintlnStatementHandler(evaluator, out));
-        statementHandlers.add(new IfStatementHandler(evaluator, () -> handlers));
-
-        Environment environment = new GlobalEnvironment();
-        return new PrintScriptInterpreter(parser, environment, handlers);
+        var tokens = LexerFactory.create(source, version);
+        var statements = ParserFactory.create(tokens, version);
+        return InterpreterFactory.create(statements, version, out, inputSource);
     }
 
     private PrintStream silentOutput() {
@@ -154,21 +133,19 @@ final class Pipeline {
     private int report(List<Diagnostic> diagnostics) {
         for (Diagnostic d : diagnostics) {
             System.err.println(
-                    "["
-                            + d.severity()
-                            + "] "
-                            + d.message()
-                            + " ("
-                            + d.span().start().line()
-                            + ":"
-                            + d.span().start().column()
-                            + " - "
-                            + d.span().end().line()
-                            + ":"
-                            + d.span().end().column()
-                            + ")");
+                    "[" + d.severity() + "] " + d.message() + " (" + describe(d.span()) + ")");
         }
         boolean hasErrors = diagnostics.stream().anyMatch(d -> d.severity() == Severity.ERROR);
         return hasErrors ? 1 : 0;
+    }
+
+    // Internamente las posiciones empiezan en 0 y la columna de fin es exclusiva.
+    // Al usuario se las mostramos como un editor: desde 1 y con el fin inclusivo.
+    static String describe(Span span) {
+        int startLine = span.start().line() + 1;
+        int startColumn = span.start().column() + 1;
+        int endLine = span.end().line() + 1;
+        int endColumn = span.end().equals(span.start()) ? startColumn : span.end().column();
+        return startLine + ":" + startColumn + " - " + endLine + ":" + endColumn;
     }
 }

@@ -1,3 +1,12 @@
 // La configuración común a todos los subproyectos vive en los convention plugins
 // de buildSrc (printscript.java-common-conventions, java-library-conventions,
 // java-application-conventions), no acá, para no duplicarla.
+
+// El hook es del repo, no de cada módulo: se registra una sola vez acá.
+tasks.register('installGitHooks', Copy) {
+    from("$rootDir/hooks/pre-commit")
+    into("$rootDir/.git/hooks")
+    filePermissions {
+        unix('rwxr-xr-x')
+    }
+}
