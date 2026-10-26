@@ -1,0 +1,40 @@
+@startuml components
+title PrintScript - Diagrama de componentes
+
+skinparam componentStyle uml2
+
+package "PrintScript" {
+    component "cli" as cli
+    component "formatter" as formatter
+    component "analyzer" as analyzer
+    component "interpreter" as interpreter
+    component "parser" as parser
+    component "lexer" as lexer
+    component "ast" as ast
+    component "common" as common
+}
+
+cli --> formatter
+cli --> analyzer
+cli --> interpreter
+cli --> parser
+cli --> lexer
+
+formatter --> lexer
+analyzer --> ast
+interpreter --> ast
+parser --> ast
+
+lexer --> common
+ast --> common
+parser --> common
+interpreter --> common
+analyzer --> common
+formatter --> common
+
+note right of parser
+  No depende del lexer:
+  recibe cualquier Iterator de tokens.
+end note
+
+@enduml
